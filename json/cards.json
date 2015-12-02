@@ -1,0 +1,63 @@
+{
+  "cards":   [
+    {
+      "type":"bomb",
+      "name":"Bomb",
+      "image":"bomb.png"
+    },
+    {
+      "type":"disposal",
+      "name":"Disposal kit",
+      "image":"disposal.png"
+    },
+    {
+     "type":"suspect",
+      "name":"Wario",
+      "image":"wario.png"
+    },
+    {
+      "type":"suspect",
+      "name":"Bomber man",
+      "image":"bomberman.png"
+    },
+    {
+      "type":"suspect",
+      "name":"coyote",
+      "image":"coyote.png"
+    },
+    {
+      "type":"suspect",
+      "name":"Dr. Strangelove",
+      "image":"strangelove.png"
+    },
+    {
+      "type":"next",
+      "name":"Next one, please",
+      "image":"next.png"
+    },
+    {
+      "type":"nope",
+      "name":"Nope",
+      "image":"nope.png"
+    },
+    {
+      "type":"skip",
+      "name":"Skip",
+      "image":"skip.png"
+    },
+    {
+      "type":"future",
+      "name":"See the future",
+      "image":"future.png"
+    },
+    {
+      "type":"shuffle",
+      "name":"Shuffle",
+      "image":"shuffle.png"
+    }, {
+      "type":"favour",
+      "name":"Favour",
+      "image":"favour.png"
+    }
+  ]
+}

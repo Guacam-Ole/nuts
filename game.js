@@ -9,7 +9,6 @@ var game = function () {
 game.prototype = {
     constructor: game,
     init:function(numPlayers) {
-
         this.filldeck(numPlayers);
     },
     readAllCards:function() {

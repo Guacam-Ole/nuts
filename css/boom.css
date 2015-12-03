@@ -1,0 +1,63 @@
+.left {
+    float:left;
+    /*background-color: goldenrod;*/
+}
+.right {
+    float: left;
+    /*background-color: aquamarine;*/
+    width: 800px;
+}
+
+
+.top {
+/*background-color: blue;*/
+}
+.yours {
+    /*background-color: darkgrey;*/
+    clear:both;
+    position: absolute;
+    bottom: 0;
+    height: 390px;
+}
+
+.players {
+    /*background-color: coral;*/
+    min-width: 300px;
+    margin-right: 10px;
+}
+.players ul {
+    list-style-type: none;
+    margin-left: -20px
+}
+
+.lastPlayedCards {
+
+}
+.lastPlayedCards .singleCard {
+    position: relative;
+    top: 0px;
+    margin-left: -80px;
+    float: inherit;
+    left: 80px;
+}
+.deck, .lastPlayedCards {
+    float: left;
+    margin-left: 20px;
+}
+
+.yourCards .singleCard {
+    position: absolute;
+    bottom: 0px;
+    height: 40%;
+}
+
+.turn  {
+    margin-right: 10px;
+}
+
+span.cardInfo {
+    float: right;
+}
+li.active {
+    background-color: bisque;
+}

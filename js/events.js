@@ -1,17 +1,11 @@
 $( document ).ready(function() {
-    $('.singleCard')
+    $('.yourCards .singleCard')
         .hover(
             function() {
-                $(this).
-                animate({
-                    height: "100%"
-                }, 500);
+                $(this).css("z-index","20");
             }
         ,
         function() {
-                $(this).
-                animate({
-                    height: "40%"
-                }, 200);
+                $(this).css("z-index","10");
         });
 });

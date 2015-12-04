@@ -1,27 +1,36 @@
-<html>
+<html ng-app="boomApp">
 <head>
     <meta charset="utf-8"/>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="css/boom.css">
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.2/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
     <script src="js/game.js"></script>
     <script src="js/events.js"></script>
+    <script src="js/app.js"></script>
 </head>
 <body>
-<div class="cardTable">
+<div class="cardTable" ng-controller="tableController">
     <div class="left">
         <div class="players">
             <span class="subTitle">Players:</span>
-            <ul>
-                <li><span class="turn"><i title="watching" class="fa fa-eye"></i></span><span class="name">John Doe</span> <span class="cardInfo">34 Cards</span> </li>
-                <li><span class="turn"><i title="waiting" class="fa fa-hourglass-half"></i></span><span class="name">Jane Doe</span> <span class="cardInfo">4 Cards</span> </li>
-                <li><span class="turn"><i title="has been bombed" class="fa fa-bomb"></i></span><span class="name">Rolf</span> <span class="cardInfo">5 Cards</span> </li>
-                <li><span class="turn"><i title="waiting" class="fa fa-hourglass-half"></i></span><span class="name">Hannes</span> <span class="cardInfo">6 Cards</span> </li>
-                <li class="active"><span class="turn"><i title="playing" class="fa fa-gamepad"></i></span><span class="name">The invisble manfred</span> <span class="cardInfo">4 Cards</span> </li>
-                <li><span class="turn"><i title="has been bombed" class="fa fa-bomb"></i></span><span class="name">Rüdiger</span> <span class="cardInfo">12 Cards</span> </li>
+                <ul>
+                    <li ng-repeat="player in players" class="{{player.state=='playing'?'active':''}}">
+                        <span class="turn"><i title="{{player.state}}" class="fa {{getStateIcon(player.state)}}" ></i></span>
+                        <span class="name">{{player.name}}</span>
+                        <span class="cardInfo">{{player.cards.length}} cards</span>
+                    </li>
             </ul>
+        </div>
+        <div class="log">
+            <span class="subTitle">History:</span>
+            <ul>
+                <li>Waiting for John Doe to play</li>
+                <li>Rüdiger drew a card</li>
+                <li>Rüdiger played 'See the future'</li>
+            </ul>
+
         </div>
     </div>
     <div class="right">
@@ -36,24 +45,40 @@
                 <div class="subTitle"><span>Last played cards:</span></div>
                 <div class="singleCard">
                     <img src="./img/cardback.png">
-                    <div class="deckText">Played by Jane Doe</div>
                 </div>
                 <div class="singleCard">
                     <img src="./img/cardback.png">
-                    <div class="deckText">Played by Rolf</div>
                 </div>
                 <div class="singleCard">
                     <img src="./img/cardback.png">
-                    <div class="deckText">Played by Hannes</div>
                 </div>
             </div>
         </div>
         <div class="yours">
-            <div>
-                <span class="yourCards">These are your cards. </span>
-                <span class="status">Waiting for Hannes to play</span>
-            </div>
+
             <div class="yourCards">
+                <div>Waiting fur Hannes to play</div>
+                <div class="singleCard">
+                    <img src="./img/cardback.png">
+                </div>
+                <div class="singleCard">
+                    <img src="./img/cardback.png">
+                </div>
+                <div class="singleCard">
+                    <img src="./img/cardback.png">
+                </div>
+                <div class="singleCard">
+                    <img src="./img/cardback.png">
+                </div>
+                <div class="singleCard">
+                    <img src="./img/cardback.png">
+                </div>
+                <div class="singleCard">
+                    <img src="./img/cardback.png">
+                </div>
+                <div class="singleCard">
+                    <img src="./img/cardback.png">
+                </div>
                 <div class="singleCard">
                     <img src="./img/cardback.png">
                 </div>

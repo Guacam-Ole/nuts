@@ -18,6 +18,7 @@
     position: absolute;
     bottom: 0;
     height: 390px;
+    width: 100%;
 }
 
 .players {
@@ -36,19 +37,34 @@
 .lastPlayedCards .singleCard {
     position: relative;
     top: 0px;
-    margin-left: -80px;
+    margin-left: -60px;
     float: inherit;
-    left: 80px;
+    left: 60px;
 }
+
+
+ .yourCards .singleCard {
+    position: relative;
+    margin-left: -40px;
+    float: inherit;
+    left: 40px;
+}
+
+
 .deck, .lastPlayedCards {
     float: left;
     margin-left: 20px;
 }
 
 .yourCards .singleCard {
+
+    height: 40%;
+}
+
+.yourCards {
     position: absolute;
     bottom: 0px;
-    height: 40%;
+    float: left;
 }
 
 .turn  {
@@ -60,4 +76,5 @@ span.cardInfo {
 }
 li.active {
     background-color: bisque;
+    font-weight: bold;
 }

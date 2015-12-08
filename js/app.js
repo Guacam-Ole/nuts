@@ -3,6 +3,7 @@ angular.module('boomApp', [])
         $scope.isTraining=true; // Training= Man spielt alle Spieler selbst
         $scope.currentPlayerId="1";
         $scope.selectedCards=[];
+        $scope.showBomb=false;
         $scope.players= [
             {
                 "id":"1",
@@ -103,6 +104,12 @@ angular.module('boomApp', [])
                 $scope.selectedCards.push(card);
             }
 
+        };
+        $scope.bombDrawn=function() {
+          startBomb();
+        };
+        $scope.bombDetonated= function () {
+          // BOOOOOM
         };
 
         $scope.canPlay=function()  {

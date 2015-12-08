@@ -1,4 +1,4 @@
-<html ng-app="boomApp">
+<html  ng-app="boomApp">
 <head>
     <meta charset="utf-8"/>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
@@ -9,9 +9,11 @@
     <script src="js/game.js"></script>
     <script src="js/events.js"></script>
     <script src="js/app.js"></script>
+    <script src="js/circle-progress.js"></script>
 </head>
 <body>
-<div class="cardTable" ng-controller="tableController">
+<div class="gonnaBoom"><div class="bombTimer"></div><div class="bombCount">10</div></div>
+<div class="cardTable" id="cardTable" ng-controller="tableController">
     <div class="left">
         <div class="players">
             <span class="subTitle">Players:</span>
@@ -47,7 +49,7 @@
             </div>
         </div>
         <div class="yours" ng-Disabled="{{currentGame.currentPlayer().id!==id}}">
-            <div class="play"><button ng-show="canPlay()">Play card(s)</button></div>
+            <div class="play"><button ng-show="canPlay()">Play card(s)</button> Test: <a ng-click="bombDrawn()">BOMB</a></div>
             <div class="yourCards">
                 <div class="infoState">{{getState()}}</div>
                 <div  class="singleCard {{cardIsSelected(card)?'selected':''}}" ng-repeat="card in currentGame.getMyProfile(id).cards track by $index" style="{{cardIsSelected(card)?'bottom:50px;z-index:700':''}}">

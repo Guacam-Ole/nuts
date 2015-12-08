@@ -97,3 +97,19 @@ li.active {
 .singleCard .selected {
     bottom: 50px !important;
 }
+.gonnaBoom {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100px;
+    /*background: orange;*/
+    height: 100px;
+    display: none;
+}
+.bombCount {
+    position: relative;
+    top: -94px;
+    left: 30px;
+    font-size: 70px;
+    font-family: Impact, Charcoal, sans-serif;
+}

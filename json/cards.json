@@ -11,39 +11,44 @@
       "image":"disposal.png"
     },
     {
-     "type":"suspect",
-      "name":"Wario",
-      "image":"wario.png"
+     "type":"thief",
+      "name":"Thief",
+      "image":"thief1.png"
     },
     {
-      "type":"suspect",
-      "name":"Bomber man",
-      "image":"bomberman.png"
+    "type":"thief",
+    "name":"Thief",
+    "image":"thief2.png"
     },
     {
-      "type":"suspect",
-      "name":"coyote",
-      "image":"coyote.png"
+      "type":"thief",
+      "name":"Thief",
+      "image":"thief3.png"
     },
     {
-      "type":"suspect",
-      "name":"Dr. Strangelove",
-      "image":"strangelove.png"
+      "type":"thief",
+      "name":"Thief",
+      "image":"thief4.png"
     },
     {
-      "type":"next",
-      "name":"Next one, please",
-      "image":"next.png"
+      "type":"thief",
+      "name":"Thief",
+      "image":"thief5.png"
     },
     {
-      "type":"nope",
-      "name":"Nope",
-      "image":"nope.png"
+      "type":"force",
+      "name":"Force to draw",
+      "image":"attack.png"
     },
     {
-      "type":"skip",
-      "name":"Skip",
-      "image":"skip.png"
+      "type":"no",
+      "name":"No",
+      "image":"no.png"
+    },
+    {
+      "type":"sleep",
+      "name":"Sleep",
+      "image":"sleep.png"
     },
     {
       "type":"future",
@@ -55,9 +60,14 @@
       "name":"Shuffle",
       "image":"shuffle.png"
     }, {
-      "type":"favour",
-      "name":"Favour",
-      "image":"favour.png"
+      "type":"gift",
+      "name":"Happy Birthday",
+      "image":"gift.png"
+    },
+    {
+      "type":"reverse",
+      "name":"change play direction",
+      "image":"reverse.png"
     }
   ]
 }

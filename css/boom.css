@@ -65,6 +65,7 @@
     position: absolute;
     bottom: 0px;
     float: left;
+    width: 100%;
 }
 
 .turn  {
@@ -77,4 +78,22 @@ span.cardInfo {
 li.active {
     background-color: bisque;
     font-weight: bold;
+}
+.disableCards {
+    width:100%;
+    position: absolute;
+    background: green;
+    height: 200px;
+    z-index: 600;
+    bottom: 0px;
+}
+
+.infoState {
+    margin-bottom: 60px;
+    background: burlywood;
+    padding: 5px;
+}
+
+.singleCard .selected {
+    bottom: 50px !important;
 }

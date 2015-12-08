@@ -16,9 +16,9 @@
         <div class="players">
             <span class="subTitle">Players:</span>
                 <ul>
-                    <li ng-repeat="player in players" class="{{player.state=='playing'?'active':''}}">
+                    <li ng-repeat="player in currentGame.players" class="{{player.state=='playing'?'active':''}}">
                         <span class="turn"><i title="{{player.state}}" class="fa {{getStateIcon(player.state)}}" ></i></span>
-                        <span class="name">{{player.name}}</span>
+                        <span class="name" ng-click="setAsCurrentPlayer(player)" >{{player.name}}</span>
                         <span class="cardInfo">{{player.cards.length}} cards</span>
                     </li>
             </ul>
@@ -26,63 +26,36 @@
         <div class="log">
             <span class="subTitle">History:</span>
             <ul>
-                <li>Waiting for John Doe to play</li>
-                <li>Rüdiger drew a card</li>
-                <li>Rüdiger played 'See the future'</li>
+                <li ng-repeat="entry in currentGame.getLog(10) track by $index">{{entry}}</li>
             </ul>
-
         </div>
+        <a ng-click="startGame()">New Game</a>
     </div>
     <div class="right">
         <div class="top">
             <div class="deck">
                 <div class="subTitle"><span>Remaining cards:</span></div>
                 <img src="./img/cardback.png">
-                <div class="deckText">34 Cards on deck</div>
-                <div class="drawCardFromDeck">Draw card</div>
+                <div class="deckText">{{currentGame.deck.length}} Cards on deck</div>
             </div>
             <div class="lastPlayedCards">
                 <div class="subTitle"><span>Last played cards:</span></div>
-                <div class="singleCard">
-                    <img src="./img/cardback.png">
+                <div ng-repeat="card in currentGame.lastPlayedCards()" class="singleCard">
+                    <img src="./img/{{card.image}}cardback.png">
                 </div>
-                <div class="singleCard">
-                    <img src="./img/cardback.png">
-                </div>
-                <div class="singleCard">
-                    <img src="./img/cardback.png">
-                </div>
+
             </div>
         </div>
-        <div class="yours">
-
+        <div class="yours" ng-Disabled="{{currentGame.currentPlayer().id!==id}}">
+            <div class="play"><button ng-show="canPlay()">Play card(s)</button></div>
             <div class="yourCards">
-                <div>Waiting fur Hannes to play</div>
-                <div class="singleCard">
-                    <img src="./img/cardback.png">
+                <div class="infoState">{{getState()}}</div>
+                <div  class="singleCard {{cardIsSelected(card)?'selected':''}}" ng-repeat="card in currentGame.getMyProfile(id).cards track by $index" style="{{cardIsSelected(card)?'bottom:50px;z-index:700':''}}">
+                    <img src="./img/{{card.image}}" title="{{card.name}}" ng-click="selectCard(card)"  >
                 </div>
-                <div class="singleCard">
-                    <img src="./img/cardback.png">
-                </div>
-                <div class="singleCard">
-                    <img src="./img/cardback.png">
-                </div>
-                <div class="singleCard">
-                    <img src="./img/cardback.png">
-                </div>
-                <div class="singleCard">
-                    <img src="./img/cardback.png">
-                </div>
-                <div class="singleCard">
-                    <img src="./img/cardback.png">
-                </div>
-                <div class="singleCard">
-                    <img src="./img/cardback.png">
-                </div>
-                <div class="singleCard">
-                    <img src="./img/cardback.png">
-                </div>
+
             </div>
+            <div ng-hide="{{currentGame.currentPlayer().id===id}}" class="disableCards">&nbsp;</div>
         </div>
 
     </div>

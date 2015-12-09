@@ -81,9 +81,30 @@ game.prototype = {
         player.cards.push(card);
         return card;
     },
-    playCard:function(player,card) {
+    playCard:function(cards, secondPlayer) {
+        var obj=this;
+        var player=this.currentPlayer();
+        var retValue=null;
         this.log.unshift(player.name+" played a card");
-        this.playedCards.unshift(card);
+        cards.forEach(function(card) {
+            obj.playedCards.unshift(card);
+            for(i = player.cards.length - 1; i >= 0; i--) {
+                if(player.cards[i].id===card.id) {
+                    player.cards.splice(i, 1);
+                }
+            }
+        });
+        switch (cards[0].type) {
+            case "thief":
+                // Zufällige Karte von Spieler nehmen:
+                var cardId=Math.floor(Math.random() * secondPlayer.cards.length);
+                var card=secondPlayer.cards[cardId];
+                secondPlayer.cards.splice(cardId,1);
+                player.cards.push(card);
+        }
+
+
+
         // TODO: Auswirkung der Karte
     },
     initPlayers:function(ids, names) {

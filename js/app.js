@@ -4,6 +4,7 @@ angular.module('boomApp', [])
         $scope.currentPlayerId="1";
         $scope.selectedCards=[];
         $scope.showBomb=false;
+        $scope.waitingForPlayerSelection=undefined;
         $scope.players= [
             {
                 "id":"1",
@@ -58,8 +59,15 @@ angular.module('boomApp', [])
         $scope.currentGame=new game();
 
         $scope.setAsCurrentPlayer=function(player) {
-            if ($scope.isTraining) {
-                $scope.id=player.id;
+            if ($scope.waitingForPlayerSelection!==undefined) {
+                $scope.currentGame.playCard($scope.selectedCards,player);
+                $scope.selectedCards=[];
+                $scope.waitingForPlayerSelection=undefined;
+            } else {
+                if ($scope.isTraining) {
+                    $scope.id = player.id;
+                    $scope.beginRound();
+                }
             }
         };
         $scope.getState=function() {
@@ -74,6 +82,15 @@ angular.module('boomApp', [])
                 return "Please play a card or select a card from the deck to end your turn";
             } else {
                 return "waiting for "+$scope.currentGame.currentPlayer().name;
+            }
+        };
+
+        $scope.playerSelectable= function (player) {
+            // Spieler ist auswählbar? (true nach Spielen von bestimmten Karten)
+            if ($scope.waitingForPlayerSelection===undefined || $scope.id===player.id) {
+                return false;
+            } else if ($scope.waitingForPlayerSelection==="getCard") {
+                return player.state==="waiting" && player.cards.length>0;
             }
         };
 
@@ -111,7 +128,25 @@ angular.module('boomApp', [])
         $scope.bombDetonated= function () {
           // BOOOOOM
         };
+        $scope.beginRound=function() {
+            $scope.selectedCards=[];
+        };
+        $scope.playCard=function() {
+            switch  ($scope.selectedCards[0].type) {
+                case "thief":
+                    $scope.waitingForPlayerSelection="getCard";
 
+                    break;
+                default:
+                    $scope.waitingForPlayerSelection=undefined;
+                    $scope.currentGame.playCard($scope.currentPlayer(),$scope.selectedCards);
+                    $scope.selectedCards=[];
+                    break;
+            }
+        };
+        $scope.showSelect=function() {
+            return $scope.waitingForPlayerSelection!==undefined;
+        }
         $scope.canPlay=function()  {
             if ($scope.currentGame===undefined || $scope.currentGame.currentPlayer()===undefined) {
                 return false;

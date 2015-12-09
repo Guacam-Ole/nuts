@@ -97,6 +97,12 @@ li.active {
 .singleCard .selected {
     bottom: 50px !important;
 }
+.selectPlayer {
+
+    background: darkkhaki;
+    padding: 5px;
+
+}
 .gonnaBoom {
     position: absolute;
     top: 50%;
@@ -113,3 +119,13 @@ li.active {
     font-size: 70px;
     font-family: Impact, Charcoal, sans-serif;
 }
+
+li.selectable {
+    cursor: pointer;
+}
+
+li.selectable:hover {
+    background: black;
+    color: wheat;
+}
+

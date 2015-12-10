@@ -5,12 +5,19 @@ var game = function () {
     this.playedCards=[];
     this.log=[];
     this.readAllCards();
+    this.nopetime=5; // Sekunden, die man Zeit hat, um "NOPE" auszuspielen
+    this.waitForNope=false;
+    this.someOneNoped=false;
+    this.finalTimeout=undefined;
+    this.secondPlayer=undefined;
 };
 
 
 game.prototype = {
     constructor: game,
     init:function(numPlayers) {
+        scope = angular.element($('#cardTable')).scope();
+
         this.log=[];
         this.log.unshift("Waiting for players...")
         this.filldeck(numPlayers);
@@ -83,6 +90,9 @@ game.prototype = {
     },
     playCard:function(cards, secondPlayer) {
         var obj=this;
+        obj.waitForNope=false;
+        obj.secondPlayer=secondPlayer;
+
         var player=this.currentPlayer();
         var retValue=null;
         this.log.unshift(player.name+" played a card");
@@ -96,16 +106,83 @@ game.prototype = {
         });
         switch (cards[0].type) {
             case "thief":
-                // Zufällige Karte von Spieler nehmen:
-                var cardId=Math.floor(Math.random() * secondPlayer.cards.length);
-                var card=secondPlayer.cards[cardId];
-                secondPlayer.cards.splice(cardId,1);
-                player.cards.push(card);
+                obj.waitForNope=true;
+
+        }
+
+        if (obj.waitForNope) {
+          obj.setTimeout(cards[0]);
         }
 
 
 
         // TODO: Auswirkung der Karte
+    },
+    setTimeout:function(card) {
+        var obj=this;
+        if (obj.finalTimeout!==undefined) {
+            clearTimeout(obj.finalTimeout);
+        }
+        // Kann abgebrochen werden. Abwarten, ob jemand "Nope" spielt
+        obj.finalTimeout=setTimeout(function(){
+            obj.playCardFinally(card,obj.secondPlayer);
+        }, 1000*obj.nopetime);
+    },
+    playNope:function(player, card) {
+        if (!this.waitForNope) {
+            return;
+        }
+        this.log.unshift(player.name+" played 'No'");
+        this.someOneNoped=!this.someOneNoped;
+        obj.playedCards.unshift(card);
+        for(i = player.cards.length - 1; i >= 0; i--) {
+            if(player.cards[i].id===card.id) {
+                player.cards.splice(i, 1);
+            }
+        }
+    },
+    playCardFinally:function(card) {
+        if (this.someOneNoped) {
+            return; // nix tun
+        }
+        switch (card.type) {
+            case "thief":
+                this.log.unshift(this.currentPlayer().name+" took a card from "+this.secondPlayer.name);
+                // Zufällige Karte von Spieler nehmen:
+                var cardId = Math.floor(Math.random() * this.secondPlayer.cards.length);
+                var card = this.secondPlayer.cards[cardId];
+                this.secondPlayer.cards.splice(cardId, 1);
+                this.currentPlayer().cards.push(card);
+                break;
+        }
+        this.nextPlayer();
+    },
+    nextPlayer:function() {
+        var counter=0;
+        var np=0;
+
+        this.players.forEach(function(player) {
+            if (player.state==="playing") {
+                player.state="waiting";
+                np=counter+1;
+            }
+            counter++;
+        });
+        var found=false;
+        while (!found) {
+            if (this.players.length<np) {
+                np=0;
+            }
+            if (this.players[np].state==="waiting") {
+                this.players[np].state="playing";
+                found=true;
+            } else {
+                np++;
+            }
+        }
+        scope.$apply(function() {
+            scope.next();
+        });
     },
     initPlayers:function(ids, names) {
         var obj=this;

@@ -59,7 +59,7 @@ angular.module('boomApp', [])
         $scope.currentGame=new game();
 
         $scope.setAsCurrentPlayer=function(player) {
-            if ($scope.waitingForPlayerSelection!==undefined) {
+            if ($scope.waitingForPlayerSelection!==undefined && $scope.playerSelectable(player)) {
                 $scope.currentGame.playCard($scope.selectedCards,player);
                 $scope.selectedCards=[];
                 $scope.waitingForPlayerSelection=undefined;
@@ -69,6 +69,9 @@ angular.module('boomApp', [])
                     $scope.beginRound();
                 }
             }
+        };
+        $scope.next=function() {
+
         };
         $scope.getState=function() {
 
@@ -146,7 +149,7 @@ angular.module('boomApp', [])
         };
         $scope.showSelect=function() {
             return $scope.waitingForPlayerSelection!==undefined;
-        }
+        };
         $scope.canPlay=function()  {
             if ($scope.currentGame===undefined || $scope.currentGame.currentPlayer()===undefined) {
                 return false;

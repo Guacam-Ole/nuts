@@ -5,7 +5,7 @@ var game = function () {
     this.playedCards=[];
     this.log=[];
     this.readAllCards();
-    this.nopetime=30; // Sekunden, die man Zeit hat, um "NOPE" auszuspielen
+    this.nopetime=10; // Sekunden, die man Zeit hat, um "NOPE" auszuspielen
     this.waitForNope=false;
     this.someOneNoped=false;
     this.finalTimeout=undefined;
@@ -169,7 +169,9 @@ game.prototype = {
         }
     },
     playCardFinally:function(card, doWait) {
+        this.waitForNope=false;
         if (this.someOneNoped && card.type!="force") {
+            this.someOneNoped=false;
             return; // nix tun
         }
         if (card.type==="gift" && this.offeredGift===undefined) {
@@ -224,6 +226,8 @@ game.prototype = {
                 // TODO: Show cards to player
                 break;
         }
+        this.someOneNoped=false;
+        this.waitForGift=false;
     },
     nextPlayer:function(doWait) {
         var counter=0;

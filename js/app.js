@@ -166,7 +166,8 @@ angular.module('boomApp', [])
             } else {
                 // Reaktionskarte
                 if ($scope.currentGame.waitForGift) {
-                    $scope.offeredGift=$scope.selectedCards[0];
+                    $scope.currentGame.offeredGift=$scope.selectedCards[0];
+                    $scope.currentGame.waitForGift=false;
                 } else if ($scope.currentGame.waitForNope) {
                     $scope.currentGame.playNope($scope.id, $scope.selectedCards[0])
                 } else  {

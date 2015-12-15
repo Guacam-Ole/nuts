@@ -70,8 +70,8 @@
       <file leaf-file-name="nuts.xml" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/nuts.xml">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.52641165">
-              <caret line="26" column="42" selection-start-line="26" selection-start-column="42" selection-end-line="26" selection-end-column="42" />
+            <state vertical-scroll-proportion="0.24772313">
+              <caret line="26" column="45" selection-start-line="26" selection-start-column="37" selection-end-line="26" selection-end-column="45" />
               <folding />
             </state>
           </provider>
@@ -141,8 +141,8 @@
     <detection-done>true</detection-done>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="-8" />
-    <option name="y" value="-8" />
+    <option name="x" value="6" />
+    <option name="y" value="530" />
     <option name="width" value="1936" />
     <option name="height" value="1100" />
   </component>
@@ -270,7 +270,7 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-8" y="-8" width="1936" height="1100" extended-state="0" />
+    <frame x="6" y="530" width="1936" height="1100" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.24973656" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -684,8 +684,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/nuts.xml">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.52641165">
-          <caret line="26" column="42" selection-start-line="26" selection-start-column="42" selection-end-line="26" selection-end-column="42" />
+        <state vertical-scroll-proportion="0.24772313">
+          <caret line="26" column="45" selection-start-line="26" selection-start-column="37" selection-end-line="26" selection-end-column="45" />
           <folding />
         </state>
       </provider>

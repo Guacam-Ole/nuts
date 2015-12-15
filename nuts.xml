@@ -21,7 +21,7 @@
 
 <html>
 <head>
-    <base href="https://raw.githubusercontent.com/OleAlbers/nuts/master/" >
+    <base href="https://rawgit.com/OleAlbers/nuts/master/" >
     <meta charset="utf-8"/>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="css/boooooom.css">

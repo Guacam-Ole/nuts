@@ -21,7 +21,7 @@
             <span class="subTitle">Players:</span>
                 <ul>
                     <li ng-repeat="player in currentGame.players" class="{{player.state=='playing'?'active':''}} {{playerSelectable(player)?'selectable':''}}">
-                        <span class="turn"><i title="{{player.state}}" class="fa {{getStateIcon(player.state)}}" ></i></span>
+                        <span class="turn"><i title="{{getStateTitle(player.state)}}" class="fa {{getStateIcon(player.state)}}" ></i></span>
                         <span class="name" ng-click="setAsCurrentPlayer(player)" >{{player.name}}</span>
                         <span class="cardInfo">{{player.cards.length}} cards</span>
                     </li>
@@ -49,6 +49,16 @@
                 </div>
 
             </div>
+        </div>
+        <div class="debug"><b>Debug:</b>
+            <pre>
+                Canplay:{{canPlay()}}
+                WaitforNo:{{currentGame.waitForNope}}
+                SomeoneNoped:{{currentGame.someOneNoped}}
+                Player:{{currentGame.currentPlayer().name}}
+                SecondPlayer:{{currentGame.secondPlayer.name}}
+                playerHasToPlayDisposal:{{currentGame.playerHasToPlayDisposal}}
+        </pre>
         </div>
         <div class="yours" ng-Disabled="{{currentGame.currentPlayer().id!==id}}">
             <div class="play"><button ng-click="playCard()" ng-show="canPlay()">Play card(s)</button><div ng-show="showSelect()" class="selectPlayer">Please select a player</div> Test: <a ng-click="bombDrawn()">BOMB</a></div>

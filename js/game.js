@@ -5,11 +5,12 @@ var game = function () {
     this.playedCards=[];
     this.log=[];
     this.readAllCards();
-    this.nopetime=5; // Sekunden, die man Zeit hat, um "NOPE" auszuspielen
+    this.nopetime=30; // Sekunden, die man Zeit hat, um "NOPE" auszuspielen
     this.waitForNope=false;
     this.someOneNoped=false;
     this.finalTimeout=undefined;
     this.secondPlayer=undefined;
+    this.numRounds=1;
 };
 
 
@@ -19,7 +20,7 @@ game.prototype = {
         scope = angular.element($('#cardTable')).scope();
 
         this.log=[];
-        this.log.unshift("Waiting for players...")
+        this.log.unshift("Waiting for players...");
         this.filldeck(numPlayers);
     },
     getDeckCount:function() {
@@ -80,13 +81,34 @@ game.prototype = {
         return ("0000" + (Math.random()*Math.pow(36,4) << 0).toString(36)).slice(-4)
     },
     drawCard:function(player) {
-        // Karte aus Deck ziehen
+        // Karte aus Deck ziehen. Return: Runde beendet?
         if (player.name!==undefined) {
             this.log.unshift(player.name + " took one card from the deck (ending his turn)");
         }
         var card=this.deck.shift();
-        player.cards.push(card);
-        return card;
+        if (card.type==="bomb")  {
+            // Sofort Spielen
+            this.deck.push(card);
+            // Schauen, ob der Spieler einen Nussknacker hat:
+            var disposal = $.grep(player.cards, function(e){ return e.type == "disposal"; });
+            if (disposal.length>0) {
+                this.playerHasToPlayDisposal=true;
+                return false;
+            }
+            else {
+                // Raus!
+                player.state="bombed";
+                return true;
+            }
+        } else {
+            player.cards.push(card);
+            return true;
+        }
+    },
+    wait:function() {
+        scope.$apply(function() {
+            scope.wait();
+        });
     },
     playCard:function(cards, secondPlayer) {
         var obj=this;
@@ -106,17 +128,20 @@ game.prototype = {
         });
         switch (cards[0].type) {
             case "thief":
+            case "force":
+            case "sleep":
+            case "gift":
+            case "shuffle":
+            case "future":
                 obj.waitForNope=true;
-
+                break;
         }
 
         if (obj.waitForNope) {
           obj.setTimeout(cards[0]);
+        } else {
+            obj.playCardFinally(cards[0],false);
         }
-
-
-
-        // TODO: Auswirkung der Karte
     },
     setTimeout:function(card) {
         var obj=this;
@@ -125,39 +150,82 @@ game.prototype = {
         }
         // Kann abgebrochen werden. Abwarten, ob jemand "Nope" spielt
         obj.finalTimeout=setTimeout(function(){
-            obj.playCardFinally(card,obj.secondPlayer);
+            obj.playCardFinally(card, true);
         }, 1000*obj.nopetime);
     },
-    playNope:function(player, card) {
+    playNope:function(playerId, card) {
+
         if (!this.waitForNope) {
             return;
         }
+        var player= $.grep(this.players, function(e){ return e.id == playerId; })[0];
         this.log.unshift(player.name+" played 'No'");
         this.someOneNoped=!this.someOneNoped;
-        obj.playedCards.unshift(card);
+        this.playedCards.unshift(card);
         for(i = player.cards.length - 1; i >= 0; i--) {
             if(player.cards[i].id===card.id) {
                 player.cards.splice(i, 1);
             }
         }
     },
-    playCardFinally:function(card) {
-        if (this.someOneNoped) {
+    playCardFinally:function(card, doWait) {
+        if (this.someOneNoped && card.type!="force") {
             return; // nix tun
         }
+        if (card.type==="gift" && this.offeredGift===undefined) {
+            this.waitForGift=true;
+            setTimeout(card); // Solange warten, bis Spieler Karte ausgewählt hat.
+            // TODO: Event an Spieler zum zücken der Karte
+        }
         switch (card.type) {
+            case "disposal":
+                // Nuss entschärft
+                this.log.unshift(this.currentPlayer().name+" didn't go nuts");
+                this.nextPlayer(doWait);
             case "thief":
+                // Zufallskarte stehlen
                 this.log.unshift(this.currentPlayer().name+" took a card from "+this.secondPlayer.name);
                 // Zufällige Karte von Spieler nehmen:
                 var cardId = Math.floor(Math.random() * this.secondPlayer.cards.length);
-                var card = this.secondPlayer.cards[cardId];
+                var newcard = this.secondPlayer.cards[cardId];
                 this.secondPlayer.cards.splice(cardId, 1);
-                this.currentPlayer().cards.push(card);
+                this.currentPlayer().cards.push(newcard);
+                break;
+            case "force":
+                // Nächster Spieler muss zwei Runden spielen
+                this.log.unshift(this.currentPlayer().name+" forces "+this.secondPlayer.name+" to play two rounds");
+                if (this.someOneNoped) {
+                    this.numRounds=1;
+                } else {
+                    this.numRounds = 2;   // Nächster Spieler muss zweimal ziehen
+                }
+                this.nextPlayer(doWait);
+                break;
+            case "sleep":
+                // Glatt verpennt. Keine Karte ziehen am Ende
+                this.log.unshift(this.currentPlayer().name+" sleeps missing his turn");
+                this.nextPlayer(doWait);
+                break;
+            case "gift":
+                // "Geschenk" von anderem Spiele annehmen:
+                this.log.unshift(this.currentPlayer().name+" receives a gift from "+this.secondPlayer.name);
+                var newcard = this.secondPlayer.cards[this.offeredGift];
+                this.secondPlayer.cards.splice(this.offeredGift, 1);
+                this.currentPlayer().cards.push(newcard);
+                break;
+            case "shuffle":
+                // Mischen des Stapels
+                this.log.unshift(this.currentPlayer().name+" shuffles the cards");
+                this.shuffle(this.deck);
+                break;
+            case "future":
+                // In die Zukunft schauen
+                this.log.unshift(this.currentPlayer().name+" looks into the future");
+                // TODO: Show cards to player
                 break;
         }
-        this.nextPlayer();
     },
-    nextPlayer:function() {
+    nextPlayer:function(doWait) {
         var counter=0;
         var np=0;
 
@@ -180,9 +248,9 @@ game.prototype = {
                 np++;
             }
         }
-        scope.$apply(function() {
-            scope.next();
-        });
+        if (doWait) {
+            this.wait();
+        }
     },
     initPlayers:function(ids, names) {
         var obj=this;

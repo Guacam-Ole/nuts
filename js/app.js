@@ -70,9 +70,10 @@ angular.module('boomApp', [])
                 }
             }
         };
-        $scope.next=function() {
+        $scope.wait=function() {
 
         };
+
         $scope.getState=function() {
 
             if ($scope.currentGame===undefined) {
@@ -83,7 +84,12 @@ angular.module('boomApp', [])
                 return "waiting for players";
             } else if ($scope.currentGame.currentPlayer().id===$scope.id) {
                 return "Please play a card or select a card from the deck to end your turn";
-            } else {
+            } else if ($scope.currentGame.waitForGift && $scope.currentGame.secondPlayer.id===$scope.id)
+            {
+                return "please select a card you want to offer as a gift"
+            }
+            else
+            {
                 return "waiting for "+$scope.currentGame.currentPlayer().name;
             }
         };
@@ -97,6 +103,18 @@ angular.module('boomApp', [])
             }
         };
 
+        $scope.getStateTitle=function(state) {
+            switch (state) {
+                case "watching":
+                    return "Just watching the game";
+                case "waiting":
+                    return "Waiting for his turn";
+                case "bombed":
+                    return "Gone nuts";
+                case "playing":
+                    return "Playing";
+            }
+        };
         $scope.getStateIcon=function(state) {
             switch (state) {
                 case "watching":
@@ -104,7 +122,7 @@ angular.module('boomApp', [])
                 case "waiting":
                     return "fa-hourglass-half";
                 case "bombed":
-                    return "fa-bomb";
+                    return "fa-bam";
                 case "playing":
                     return "fa-gamepad";
             }
@@ -125,28 +143,39 @@ angular.module('boomApp', [])
             }
 
         };
-        $scope.bombDrawn=function() {
-          startBomb();
-        };
-        $scope.bombDetonated= function () {
-          // BOOOOOM
-        };
+
+
         $scope.beginRound=function() {
             $scope.selectedCards=[];
         };
         $scope.playCard=function() {
-            switch  ($scope.selectedCards[0].type) {
-                case "thief":
-                    $scope.waitingForPlayerSelection="getCard";
+            if ($scope.currentGame.currentPlayer().id===$scope.id) {
+                switch ($scope.selectedCards[0].type) {
+                    case "thief":
+                    case "force":
+                    case "gift":
+                        $scope.waitingForPlayerSelection = "getCard";
+                        break;
+                    default:
+                        $scope.waitingForPlayerSelection = undefined;
+                        $scope.currentGame.playCard($scope.selectedCards);
+                        $scope.selectedCards=[];
+                        break;
+                }
 
-                    break;
-                default:
-                    $scope.waitingForPlayerSelection=undefined;
-                    $scope.currentGame.playCard($scope.currentPlayer(),$scope.selectedCards);
-                    $scope.selectedCards=[];
-                    break;
+            } else {
+                // Reaktionskarte
+                if ($scope.currentGame.waitForGift) {
+                    $scope.offeredGift=$scope.selectedCards[0];
+                } else if ($scope.currentGame.waitForNope) {
+                    $scope.currentGame.playNope($scope.id, $scope.selectedCards[0])
+                } else  {
+                    $scope.currentGame.playCard($scope.selectedCards);  // Nussknacker
+                }
+                $scope.selectedCards=[];
             }
         };
+
         $scope.showSelect=function() {
             return $scope.waitingForPlayerSelection!==undefined;
         };
@@ -154,13 +183,31 @@ angular.module('boomApp', [])
             if ($scope.currentGame===undefined || $scope.currentGame.currentPlayer()===undefined) {
                 return false;
             }
-            if ($scope.currentGame.currentPlayer().id!==$scope.id) {
+            if ($scope.currentGame.currentPlayer().id===$scope.id && ($scope.currentGame.waitForGift || $scope.currentGame.waitForNope)) {
+                // Gemach!
                 return false;
-            }    else if ($scope.selectedCards.length===0 || $scope.selectedCards.length>2) {
+            }
+            if ($scope.currentGame.currentPlayer().id!==$scope.id) {
+                if ($scope.currentGame.waitForNope) {
+                    return $scope.selectedCards.length===1 && $scope.selectedCards[0].type==="no";
+                } else  if ($scope.currentGame.waitForGift && $scope.currentGame.secondPlayer===$scope.id) {
+                    // Spieler muss eine Karte abgeben:
+                    return $scope.selectedCards.length===1;
+                } else {
+                    return false;
+                }
+            } else if ($scope.selectedCards.length===0 || $scope.selectedCards.length>2) {
                 return false;
             } else if ($scope.selectedCards.length===1) {
-                return $scope.selectedCards[0].type!=="thief" && $scope.selectedCards[0].type!=="disposal";
+                if ($scope.currentGame.playerHasToPlayDisposal) {
+                    return $scope.selectedCards[0].type==="disposal";
+                } else {
+                    return $scope.selectedCards[0].type !== "thief" && $scope.selectedCards[0].type !== "disposal" && $scope.selectedCards[0].type!=="no";
+                }
             } else {
+                if ($scope.currentGame.playerHasToPlayDisposal) {
+                    return false;
+                }
                 // zwei Karten gewählt
                 return $scope.selectedCards[0].image===$scope.selectedCards[1].image && $scope.selectedCards[0].type==="thief";
             }

@@ -44,8 +44,8 @@
             </div>
             <div class="lastPlayedCards">
                 <div class="subTitle"><span>Last played cards:</span></div>
-                <div ng-repeat="card in currentGame.lastPlayedCards()" class="singleCard">
-                    <img src="./img/{{card.image}}cardback.png">
+                <div ng-repeat="card in currentGame.lastPlayedCards(3)" class="singleCard">
+                    <img src="./img/{{card.image}}">
                 </div>
 
             </div>

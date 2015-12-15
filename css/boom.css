@@ -46,7 +46,7 @@
  .yourCards .singleCard {
     position: relative;
     margin-left: -40px;
-    float: inherit;
+    float: left;
     left: 40px;
 }
 

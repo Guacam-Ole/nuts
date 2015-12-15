@@ -22,6 +22,7 @@
 <html  ng-app="boomApp">
 <head>
     <meta charset="utf-8"/>
+    <!--
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="css/boom.css">
 
@@ -30,7 +31,7 @@
     <script src="js/game.js"></script>
     <script src="js/events.js"></script>
     <script src="js/app.js"></script>
-    <script src="js/circle-progress.js"></script>
+    <script src="js/circle-progress.js"></script>-->
 </head>
 <body>
 <div class="gonnaBoom"><div class="bombTimer"></div><div class="bombCount">10</div></div>

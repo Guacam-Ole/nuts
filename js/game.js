@@ -113,6 +113,11 @@ game.prototype = {
             scope.wait();
         });
     },
+    showFuture:function() {
+        scope.$apply(function() {
+            scope.showFuture=true;
+        });
+    },
     playCard:function(cards, secondPlayer) {
         var obj=this;
         obj.waitForNope=false;
@@ -238,7 +243,7 @@ game.prototype = {
             case "future":
                 // In die Zukunft schauen
                 this.log.unshift(this.currentPlayer().name+" looks into the future");
-                // TODO: Show cards to player
+                this.showFuture();
                 break;
             case "reverse":
                 this.reverse=!this.reverse;

@@ -3,7 +3,7 @@ angular.module('boomApp', [])
         $scope.isTraining=true; // Training= Man spielt alle Spieler selbst
         $scope.currentPlayerId="1";
         $scope.selectedCards=[];
-        $scope.showBomb=false;
+        $scope.showFuture=false;
         $scope.waitingForPlayerSelection=undefined;
         $scope.players= [
             {
@@ -73,6 +73,12 @@ angular.module('boomApp', [])
         $scope.wait=function() {
 
         };
+        $scope.showTheFuture=function() {
+            if (!$scope.showFuture) {
+                return false;
+            }
+            return $scope.currentGame.currentPlayer().id===$scope.id;
+        };
 
         $scope.getState=function() {
 
@@ -109,7 +115,7 @@ angular.module('boomApp', [])
             if ($scope.currentGame.currentPlayer()===undefined) {
                 return false;
             }
-            return  $scope.currentGame.currentPlayer().id===$scope.id && !$scope.currentGame.playerHasToPlayDisposal && !scope.currentGame.waitForNope;
+            return  $scope.currentGame.currentPlayer().id===$scope.id && !$scope.currentGame.playerHasToPlayDisposal && !scope.currentGame.waitForNope && !scope.showFuture;
         };
 
         $scope.getStateTitle=function(state) {
@@ -193,13 +199,11 @@ angular.module('boomApp', [])
             }
         };
         $scope.cardSelectable=function(card) {
-            if (card===undefined) {
-                return;
-            }
+
             if ($scope.currentGame===undefined || $scope.currentGame.currentPlayer()===undefined) {
                 return false;
             }
-            if ($scope.currentGame.currentPlayer().id===$scope.id && ($scope.currentGame.waitForGift || $scope.currentGame.waitForNope || $scope.currentGame.offeredGift!==undefined)) {
+            if ($scope.currentGame.currentPlayer().id===$scope.id && ($scope.currentGame.waitForGift || $scope.currentGame.waitForNope || $scope.currentGame.offeredGift!==undefined || $scope.showFuture)) {
                 // Gemach!
                 return false;
             }

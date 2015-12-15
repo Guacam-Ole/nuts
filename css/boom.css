@@ -155,3 +155,19 @@ ul.history {
 .direction {
     float: right;
 }
+
+.previewCards {
+    position: absolute;
+    left: 50%;
+    right: 50%;
+    background: burlywood;
+    width: 300px;
+    margin-left: -200px;
+    padding: 10px;
+    text-align: center;
+    top: 120px;
+}
+
+.previewCards .singleCard {
+    float: left;
+}

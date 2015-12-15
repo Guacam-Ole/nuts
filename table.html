@@ -60,6 +60,14 @@
                 playerHasToPlayDisposal:{{currentGame.playerHasToPlayDisposal}}
         </pre>
         </div>
+
+        <div class="previewCards" ng-show="showFuture">
+            <div>Die nächsten 3 Karten:</div>
+            <div ng-repeat="card in currentGame.deck  | limitTo:3 track by $index" class="singleCard" >
+                <img src="./img/{{card.image}}" >
+            </div>
+            <div><a style="cursor:pointer" ng-click="showFuture=false;">Schließen</a> </div>
+        </div>
         <div class="yours" ng-Disabled="{{currentGame.currentPlayer().id!==id}}">
             <div class="play"><button ng-click="playCard()" ng-show="canPlay()">Play card(s)</button><div ng-show="showSelect()" class="selectPlayer">Please select a player</div></div>
             <div class="yourCards">

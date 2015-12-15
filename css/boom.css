@@ -152,3 +152,6 @@ ul.history {
 .yourCards .singleCard:hover {
     z-index: 2000 !important;
 }
+.direction {
+    float: right;
+}

@@ -11,6 +11,7 @@ var game = function () {
     this.finalTimeout=undefined;
     this.secondPlayer=undefined;
     this.numRounds=1;
+    this.reverse=false;
 };
 
 
@@ -136,6 +137,7 @@ game.prototype = {
             case "gift":
             case "shuffle":
             case "future":
+            case "reverse":
                 obj.waitForNope=true;
                 break;
         }
@@ -224,6 +226,7 @@ game.prototype = {
                 var newcard = this.secondPlayer.cards[this.offeredGift];
                 this.secondPlayer.cards.splice(this.offeredGift, 1);
                 this.currentPlayer().cards.push(newcard);
+                this.offeredGift=undefined;
                 this.wait();    // Status aktualisieren
                 break;
             case "shuffle":
@@ -237,18 +240,28 @@ game.prototype = {
                 this.log.unshift(this.currentPlayer().name+" looks into the future");
                 // TODO: Show cards to player
                 break;
+            case "reverse":
+                this.reverse=!this.reverse;
+                this.wait();
+                break;
         }
         this.someOneNoped=false;
         this.waitForGift=false;
     },
     nextPlayer:function(doWait) {
+        var obj=this;
         var counter=0;
         var np=0;
 
         this.players.forEach(function(player) {
             if (player.state==="playing") {
                 player.state="waiting";
-                np=counter+1;
+                if (obj.reverse) {
+                    np=counter-1;
+                } else {
+                    np=counter+1;
+                }
+
             }
             counter++;
         });
@@ -257,11 +270,19 @@ game.prototype = {
             if (this.players.length<=np) {
                 np=0;
             }
+            if (np<0) {
+                np=this.players.length-1;
+            }
             if (this.players[np].state==="waiting") {
                 this.players[np].state="playing";
                 found=true;
             } else {
-                np++;
+                if (this.reverse) {
+                    np--;
+                } else {
+                    np++;
+                }
+
             }
         }
         if (doWait) {

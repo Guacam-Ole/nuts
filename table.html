@@ -24,6 +24,7 @@
                         <span class="turn"><i title="{{getStateTitle(player.state)}}" class="fa {{getStateIcon(player.state)}}" ></i></span>
                         <span class="name" ng-click="setAsCurrentPlayer(player)" >{{player.name}}</span>
                         <span class="cardInfo">{{player.cards.length}} cards</span>
+                        <span class="direction"><i class="{{player.state==='playing'?(currentGame.reverse?'fa fa-arrow-circle-up':'fa fa-arrow-circle-down'):''}}">&nbsp;</i> </span>
                     </li>
             </ul>
         </div>

@@ -24,7 +24,7 @@
     <base href="https://rawgit.com/OleAlbers/nuts/master/" >
     <meta charset="utf-8"/>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
-    <link rel="stylesheet" href="css/boom.css">
+    <link rel="stylesheet" href="https://rawgit.com/OleAlbers/nuts/master/css/boom.css">
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
@@ -34,22 +34,7 @@
     <script src="js/circle-progress.js"></script>
 </head>
 
-<style type="text/css">
-<!--
-.button {
-  border-radius: 3px;
-  -moz-border-radius: 3px;
-  background: -webkit-gradient(linear, left top, left bottom, from(#fff), to(#ddd));
-  background: -moz-linear-gradient(top, #fff, #ddd);
-  border: 1px solid #bbb;
-}
 
-.button:active {
-        background: -webkit-gradient(linear, left top, left bottom, from(#aaa), to(#333));
-        background: -moz-linear-gradient(bottom, #ddd, #aaa); }
-
--->
-</style>
 <body>
 
 <script src="//plus.google.com/hangouts/_/api/v1/hangout.js"></script>

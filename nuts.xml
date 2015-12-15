@@ -19,7 +19,7 @@
     </ModulePrefs>
     <Content type="html"><![CDATA[
 
-<html>
+<html ng-app="boomApp">
 <head>
     <base href="https://rawgit.com/OleAlbers/nuts/master/" >
     <meta charset="utf-8"/>
@@ -38,7 +38,7 @@
 <body>
 
 <script src="//plus.google.com/hangouts/_/api/v1/hangout.js"></script>
-
+neu
 <div class="cardTable" id="cardTable" ng-controller="tableController">
 
     <div class="left">

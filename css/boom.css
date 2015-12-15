@@ -30,16 +30,16 @@
     list-style-type: none;
     margin-left: -20px
 }
-
 .lastPlayedCards {
-
+    width: 250px;
 }
+
 .lastPlayedCards .singleCard {
     position: relative;
     top: 0px;
-    margin-left: -60px;
+    margin-left: -70px;
     float: inherit;
-    left: 60px;
+    left: 70px;
 }
 
 
@@ -89,7 +89,7 @@ li.active {
 }
 
 .infoState {
-    margin-bottom: 60px;
+    margin-bottom: 90px;
     background: burlywood;
     padding: 5px;
 }
@@ -120,7 +120,7 @@ li.active {
     font-family: Impact, Charcoal, sans-serif;
 }
 
-li.selectable {
+.selectable {
     cursor: pointer;
 }
 
@@ -134,4 +134,21 @@ li.selectable:hover {
     top: -30px;
     left: 30px;
     color: red;
+}
+
+ul.history {
+    max-width: 250px;
+    list-style-type: none;
+    margin-left: -20px
+}
+
+
+.lastPlayedCards .singleCard:hover
+{
+    z-index:2000 !important;
+}
+
+
+.yourCards .singleCard:hover {
+    z-index: 2000 !important;
 }

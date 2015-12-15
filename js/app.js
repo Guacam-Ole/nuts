@@ -102,6 +102,15 @@ angular.module('boomApp', [])
                 return player.state==="waiting" && player.cards.length>0;
             }
         };
+        $scope.canEndRound=function() {
+            if ($scope.currentGame===undefined) {
+                return false;
+            }
+            if ($scope.currentGame.currentPlayer()===undefined) {
+                return false;
+            }
+            return  $scope.currentGame.currentPlayer().id===$scope.id && !$scope.currentGame.playerHasToPlayDisposal && !scope.currentGame.waitForNope;
+        };
 
         $scope.getStateTitle=function(state) {
             switch (state) {
@@ -176,6 +185,13 @@ angular.module('boomApp', [])
                 $scope.selectedCards=[];
             }
         };
+        $scope.endRound= function () {
+            if ($scope.canEndRound()) {
+                if ($scope.currentGame.drawCard($scope.currentGame.currentPlayer())) {
+                    $scope.currentGame.nextPlayer(false);
+                }
+            }
+        };
         $scope.cardSelectable=function(card) {
             if (card===undefined) {
                 return;
@@ -183,14 +199,14 @@ angular.module('boomApp', [])
             if ($scope.currentGame===undefined || $scope.currentGame.currentPlayer()===undefined) {
                 return false;
             }
-            if ($scope.currentGame.currentPlayer().id===$scope.id && ($scope.currentGame.waitForGift || $scope.currentGame.waitForNope)) {
+            if ($scope.currentGame.currentPlayer().id===$scope.id && ($scope.currentGame.waitForGift || $scope.currentGame.waitForNope || $scope.currentGame.offeredGift!==undefined)) {
                 // Gemach!
                 return false;
             }
             if ($scope.currentGame.currentPlayer().id!==$scope.id) {
                 if ($scope.currentGame.waitForNope) {
                     return card.type==="no";
-                } else  if ($scope.currentGame.waitForGift && $scope.currentGame.secondPlayer===$scope.id) {
+                } else  if ($scope.currentGame.waitForGift && $scope.currentGame.secondPlayer.id===$scope.id) {
                     // Spieler muss eine Karte abgeben:
                     return true;
                 } else {
@@ -210,36 +226,25 @@ angular.module('boomApp', [])
             return $scope.waitingForPlayerSelection!==undefined;
         };
         $scope.canPlay=function()  {
-            if ($scope.currentGame===undefined || $scope.currentGame.currentPlayer()===undefined) {
+            var cardsAllValid=true;
+            $scope.selectedCards.forEach(function(card) {
+                cardsAllValid &=$scope.cardSelectable(card);
+            });
+            if (!cardsAllValid) {
                 return false;
             }
-            if ($scope.currentGame.currentPlayer().id===$scope.id && ($scope.currentGame.waitForGift || $scope.currentGame.waitForNope)) {
-                // Gemach!
-                return false;
-            }
-            if ($scope.currentGame.currentPlayer().id!==$scope.id) {
-                if ($scope.currentGame.waitForNope) {
-                    return $scope.selectedCards.length===1 && $scope.selectedCards[0].type==="no";
-                } else  if ($scope.currentGame.waitForGift && $scope.currentGame.secondPlayer===$scope.id) {
-                    // Spieler muss eine Karte abgeben:
-                    return $scope.selectedCards.length===1;
+            if ($scope.selectedCards.length===1) {
+                if ($scope.currentGame.currentPlayer().id===$scope.id) {
+                    if ($scope.currentGame.playerHasToPlayDisposal) {
+                        return $scope.selectedCards[0].type==="disposal";
+                    } else {
+                        return $scope.selectedCards[0].type!=="thief";
+                    }
                 } else {
-                    return false;
+                    return true;
                 }
-            } else if ($scope.selectedCards.length===0 || $scope.selectedCards.length>2) {
-                return false;
-            } else if ($scope.selectedCards.length===1) {
-                if ($scope.currentGame.playerHasToPlayDisposal) {
-                    return $scope.selectedCards[0].type==="disposal";
-                } else {
-                    return $scope.selectedCards[0].type !== "thief" && $scope.selectedCards[0].type !== "disposal" && $scope.selectedCards[0].type!=="no";
-                }
-            } else {
-                if ($scope.currentGame.playerHasToPlayDisposal) {
-                    return false;
-                }
-                // zwei Karten gewählt
-                return $scope.selectedCards[0].image===$scope.selectedCards[1].image && $scope.selectedCards[0].type==="thief";
+            } else if ($scope.selectedCards.length===2) {
+                return $scope.currentGame.currentPlayer().id===$scope.id && !$scope.currentGame.playerHasToPlayDisposal && $scope.selectedCards[0].type==="thief";
             }
         };
         $scope.startGame=function() {

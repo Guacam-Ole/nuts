@@ -32,7 +32,7 @@ game.prototype = {
             return this.playedCards;
         }
         var playedCards=[];
-        for (i=0; i<count; i++) {
+        for (i=0; i<=count; i++) {
             playedCards.push(this.playedCards[i]);
         }
         return playedCards;
@@ -88,7 +88,8 @@ game.prototype = {
         var card=this.deck.shift();
         if (card.type==="bomb")  {
             // Sofort Spielen
-            this.deck.push(card);
+            this.log.unshift(player.name + " is about to go nuts!");
+            this.playedCards.unshift(card);
             // Schauen, ob der Spieler einen Nussknacker hat:
             var disposal = $.grep(player.cards, function(e){ return e.type == "disposal"; });
             if (disposal.length>0) {
@@ -98,6 +99,7 @@ game.prototype = {
             else {
                 // Raus!
                 player.state="bombed";
+                this.log.unshift(player.name + " has gone nuts!");
                 return true;
             }
         } else {
@@ -114,6 +116,7 @@ game.prototype = {
         var obj=this;
         obj.waitForNope=false;
         obj.secondPlayer=secondPlayer;
+        obj.playerHasToPlayDisposal=false;
 
         var player=this.currentPlayer();
         var retValue=null;
@@ -135,6 +138,9 @@ game.prototype = {
             case "future":
                 obj.waitForNope=true;
                 break;
+        }
+        if (secondPlayer!==undefined) {
+            this.log.unshift(player.name+" chose "+secondPlayer.name+" as the victim");
         }
 
         if (obj.waitForNope) {
@@ -172,18 +178,21 @@ game.prototype = {
         this.waitForNope=false;
         if (this.someOneNoped && card.type!="force") {
             this.someOneNoped=false;
+            this.wait();
             return; // nix tun
         }
         if (card.type==="gift" && this.offeredGift===undefined) {
             this.waitForGift=true;
-            setTimeout(card); // Solange warten, bis Spieler Karte ausgewählt hat.
-            // TODO: Event an Spieler zum zücken der Karte
+            this.setTimeout(card); // Solange warten, bis Spieler Karte ausgewählt hat.
+            this.wait();
+            return;
         }
         switch (card.type) {
             case "disposal":
                 // Nuss entschärft
                 this.log.unshift(this.currentPlayer().name+" didn't go nuts");
                 this.nextPlayer(doWait);
+                break;
             case "thief":
                 // Zufallskarte stehlen
                 this.log.unshift(this.currentPlayer().name+" took a card from "+this.secondPlayer.name);
@@ -192,6 +201,7 @@ game.prototype = {
                 var newcard = this.secondPlayer.cards[cardId];
                 this.secondPlayer.cards.splice(cardId, 1);
                 this.currentPlayer().cards.push(newcard);
+                this.wait();    // Status aktualisieren
                 break;
             case "force":
                 // Nächster Spieler muss zwei Runden spielen
@@ -214,11 +224,13 @@ game.prototype = {
                 var newcard = this.secondPlayer.cards[this.offeredGift];
                 this.secondPlayer.cards.splice(this.offeredGift, 1);
                 this.currentPlayer().cards.push(newcard);
+                this.wait();    // Status aktualisieren
                 break;
             case "shuffle":
                 // Mischen des Stapels
                 this.log.unshift(this.currentPlayer().name+" shuffles the cards");
                 this.shuffle(this.deck);
+                this.wait();    // Status aktualisieren
                 break;
             case "future":
                 // In die Zukunft schauen
@@ -242,7 +254,7 @@ game.prototype = {
         });
         var found=false;
         while (!found) {
-            if (this.players.length<np) {
+            if (this.players.length<=np) {
                 np=0;
             }
             if (this.players[np].state==="waiting") {

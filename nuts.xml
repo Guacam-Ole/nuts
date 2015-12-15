@@ -38,9 +38,18 @@
 <body>
 
 <script src="//plus.google.com/hangouts/_/api/v1/hangout.js"></script>
-neu
-<div class="cardTable" id="cardTable" ng-controller="tableController">
 
+<div class="cardTable" id="cardTable" ng-controller="tableController">
+<div class="init" ng-hide="alreadyPlaying">
+    <div class="dialog-overlay"></div>
+    <div class="dialog-box">
+        <div class="dialog-content">
+    <div>Don't go nuts!<br/><span class="subtitle">wanna play?</span></div>
+
+    <div><a ng-click="startNewGame()" class="button big {{gameRunning?'gray':'blue'}}">Start new game<span>Should only used by ONE player</span></a><a ng-click="joinGame()" class="button big {{gameRunning?'blue':'gray'}}">Join game<span>play with others</span></a><a ng-click="watchGame()" class="button big {{gameRunning?'blue':'gray'}}">Watch the game<span>Just watch others play</span></a></div>
+    </div></div>
+
+</div>
     <div class="left">
         <div class="players">
             <span class="subTitle">Players:</span>

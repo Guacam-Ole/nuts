@@ -11,6 +11,7 @@ var game = function () {
     this.finalTimeout=undefined;
     this.secondPlayer=undefined;
     this.numRounds=1;
+    this.iAmTheMaster=false;
     this.reverse=false;
 };
 
@@ -24,6 +25,7 @@ game.prototype = {
         this.log.unshift("Waiting for players...");
         this.filldeck(numPlayers);
     },
+
     getDeckCount:function() {
         return this.deck.length;
     },
@@ -65,7 +67,7 @@ game.prototype = {
         }
         this.log.unshift("cards shuffled");
     },
-    addCardsToDeck:function(card, number) {
+    addCardsToDeckdra:function(card, number) {
         // Karten zum Deck hinzufügen
         for (i=0; i<number; i++) {
             var newCard={};
@@ -295,19 +297,36 @@ game.prototype = {
         }
     },
     initPlayers:function(ids, names) {
+        this.iAmTheMaster=false;
         var obj=this;
         var counter=0;
         ids.forEach(function(id) {
             obj.players[counter].id=id;
-            obj.players[counter++].state="waiting";
+            obj.players[counter++].state="no plugin";
         });
         var counter=0;
         names.forEach(function(name) {
             obj.players[counter++].name=name;
         });
+
         // Spieler mischen (um zufälligen Anfang zu erhalten)
-        obj.shuffle(obj.players);
+    },
+    watchGame:function(id) {
+        gapi.hangout.data.submitDelta({'isAction':'1', 'actionType':'playerWatching', 'playerId': id});
+    },
+    joinGame:function(id) {
+        gapi.hangout.data.submitDelta({'isAction':'1', 'actionType':'playerJoining', 'playerId': id});
+    },
+    startGame:function(masterId) {
+        this.iAmTheMaster=true;
+        var master= $.grep(this.players, function(e){ return e.id == masterId; })[0];
+        master.state="waiting";
+        while (obj.players[0].state!=="waiting") {
+            // Solange mischen, bis an Position 0 ein aktiver Spieler auftaucht
+            obj.shuffle(obj.players);
+        }
         obj.players[0].state="playing";
+        gapi.hangout.data.submitDelta({'gameRunning': '1'});
     },
     getLog:function(count) {
         if (this.log===undefined) {

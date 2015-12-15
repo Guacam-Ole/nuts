@@ -1,9 +1,11 @@
 angular.module('boomApp', [])
     .controller('tableController', function($scope) {
-        $scope.isTraining=true; // Training= Man spielt alle Spieler selbst
-        $scope.currentPlayerId="1";
+        $scope.isTraining=false; // Training= Man spielt alle Spieler selbst
+        $scope.id=gapi.hangout.getLocalParticipantId();
         $scope.selectedCards=[];
         $scope.showFuture=false;
+        $scope.gameRunning=false;
+        $scope.alreadyPlaying=false;
         $scope.waitingForPlayerSelection=undefined;
         $scope.players= [
             {
@@ -55,6 +57,9 @@ angular.module('boomApp', [])
                 "state":"waiting"
             }
         ];
+        $scope.gameStarted=function(game) {
+            $scope.currentGame=game;
+        };
    //     $scope.playedCards=[];
         $scope.currentGame=new game();
 
@@ -156,7 +161,6 @@ angular.module('boomApp', [])
             } else {
                 $scope.selectedCards.push(card);
             }
-
         };
 
 
@@ -251,8 +255,69 @@ angular.module('boomApp', [])
                 return $scope.currentGame.currentPlayer().id===$scope.id && !$scope.currentGame.playerHasToPlayDisposal && $scope.selectedCards[0].type==="thief";
             }
         };
+        $scope.startNewGame=function() {
+            var playerIds=[];
+            var playerNames=[];
+            var playerStates=[];
+            var players= gapi.hangout.getParticipants();
+
+            players.forEach(function (player) {
+                playerIds.push(player.id);
+                playerNames.push(player.person.displayName);
+                if (player.person) {
+                    playerStates.push("starting");
+                } else {
+                    playerStates.push("watching");
+                }
+            });
+
+            $scope.currentGame.init(players.length);
+            $scope.currentGame.initPlayers(playerIds,playerNames,playerStates);
+        };
+        $scope.events=function() {
+            gapi.hangout.data.onStateChanged(function (event ) {
+                if (!$scope.currentGame.iAmTheMaster) {
+                    $scope.getGameState();
+                } else {
+                    if (event.state['isAction']==='1') {
+                        switch (event.state["actionType"]) {
+                            case "drawCard":
+                                $scope.currentGame.drawCard(JSON.parse(event.state["player"]));
+                                break;
+                            case "playCard":
+                                $scope.currentGame.playCard(JSON.parse(event.state["cards"]), JSON.parse(event.state["secondPlayer"]));
+                                break;
+                            case "playNope":
+                                $scope.currentGame.playNope(event.state["playerId"], JSON.parse(event.state["card"]));
+                                break;
+                            case "playerWatching":
+                                $scope.currentGame.addWatch(event.state["playerId"]);
+                                break;
+                            case "playerJoining":
+                                $scope.currentGame.addPlayer(event.state["playerId"]);
+                                break;
+                        }
+                    }
+                }
+            });
+        };
+        $scope.getGameState=function() {
+                var state = gapi.hangout.data.getState();
+                $scope.currentGame.players=JSON.parse(state["players"]);
+                $scope.currentGame.deck=JSON.parse(state["deck"]);
+                $scope.currentGame.playedCards=JSON.parse(state["playedCards"]);
+                $scope.currentGame.log=JSON.parse(state["log"]);
+                $scope.currentGame.waitForNope=JSON.parse(state["waitForNope"]);
+                $scope.currentGame.someOneNoped=JSON.parse(state["someOneNoped"]);
+                $scope.currentGame.secondPlayer=JSON.parse(state["secondPlayer"]);
+                $scope.currentGame.numRounds=JSON.parse(state["numRounds"]);
+                $scope.currentGame.reverse=JSON.parse(state["reverse"]);
+                $scope.gameRunning=state["gameRunning"];
+        };
+
         $scope.startGame=function() {
-          $scope.currentGame.init($scope.players.length);
+            // Test-Variante (offline)
+            $scope.currentGame.init($scope.players.length);
             var playerIds=[];
             var playerNames=[];
             $scope.players.forEach(function (player) {
@@ -260,6 +325,17 @@ angular.module('boomApp', [])
                 playerNames.push(player.name);
             });
             $scope.currentGame.initPlayers(playerIds,playerNames);
+            $scope.alreadyPlaying=true;
+        };
+
+        $scope.watchGame=function() {
+            $scope.currentGame.watchGame($scope.id);
+            $scope.alreadyPlaying=true;
+        };
+
+        $scope.joinGame= function () {
+            $scope.currentGame.joinGame($scope.id);
+            $scope.alreadyPlaying=true;
         };
 
 

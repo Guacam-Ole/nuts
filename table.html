@@ -65,6 +65,7 @@
             <div class="yourCards">
                 <div class="infoState">{{getState()}}</div>
                 <div  class="singleCard {{cardIsSelected(card)?'selected':''}}" ng-repeat="card in currentGame.getMyProfile(id).cards track by $index" style="{{cardIsSelected(card)?'bottom:50px;z-index:700':''}}">
+                    <div ng-show="cardSelectable(card)"><i class="cardsuggestion fa fa-long-arrow-down">&nbsp;</i></div>
                     <img src="./img/{{card.image}}" title="{{card.name}}" ng-click="selectCard(card)"  >
                 </div>
 

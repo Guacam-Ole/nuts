@@ -129,3 +129,9 @@ li.selectable:hover {
     color: wheat;
 }
 
+.cardsuggestion {
+    position: absolute;
+    top: -30px;
+    left: 30px;
+    color: red;
+}

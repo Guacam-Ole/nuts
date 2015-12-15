@@ -8,7 +8,7 @@ angular.module('boomApp', [])
         $scope.players= [
             {
                 "id":"1",
-                "name":"Lee Everett",
+                "name":"Lee",
                 "cards":[],
                 "state":"watching"
             },
@@ -20,13 +20,13 @@ angular.module('boomApp', [])
             },
             {
                 "id":"3",
-                "name":"Hershell Greene",
+                "name":"Hershell",
                 "cards":[],
                 "state":"waiting"
             },
             {
                 "id":"4",
-                "name":"Shawn Greene",
+                "name":"Shawn",
                 "cards":[],
                 "state":"playing"
             },
@@ -176,6 +176,35 @@ angular.module('boomApp', [])
                 $scope.selectedCards=[];
             }
         };
+        $scope.cardSelectable=function(card) {
+            if (card===undefined) {
+                return;
+            }
+            if ($scope.currentGame===undefined || $scope.currentGame.currentPlayer()===undefined) {
+                return false;
+            }
+            if ($scope.currentGame.currentPlayer().id===$scope.id && ($scope.currentGame.waitForGift || $scope.currentGame.waitForNope)) {
+                // Gemach!
+                return false;
+            }
+            if ($scope.currentGame.currentPlayer().id!==$scope.id) {
+                if ($scope.currentGame.waitForNope) {
+                    return card.type==="no";
+                } else  if ($scope.currentGame.waitForGift && $scope.currentGame.secondPlayer===$scope.id) {
+                    // Spieler muss eine Karte abgeben:
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                if ($scope.currentGame.playerHasToPlayDisposal) {
+                    return card.type==="disposal";
+                } else {
+                    return card.type === "thief" || card.type==="shuffle" || card.type==="force" || card.type==="sleep" || card.type==="future" || card.type==="gift" || card.type==="reverse";
+                }
+            }
+        };
+
 
         $scope.showSelect=function() {
             return $scope.waitingForPlayerSelection!==undefined;

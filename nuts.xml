@@ -19,78 +19,92 @@
     </ModulePrefs>
     <Content type="html"><![CDATA[
 
-<html>
-<style type="text/css">
-<!--
-.button {
-  border-radius: 3px;
-  -moz-border-radius: 3px;
-  background: -webkit-gradient(linear, left top, left bottom, from(#fff), to(#ddd));
-  background: -moz-linear-gradient(top, #fff, #ddd);
-  border: 1px solid #bbb;
-}
+<html  ng-app="boomApp">
+<head>
+    <meta charset="utf-8"/>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/boom.css">
 
-.button:active {
-        background: -webkit-gradient(linear, left top, left bottom, from(#aaa), to(#333));
-        background: -moz-linear-gradient(bottom, #ddd, #aaa); }
-
--->
-</style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+    <script src="js/game.js"></script>
+    <script src="js/events.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/circle-progress.js"></script>
+</head>
 <body>
+<div class="gonnaBoom"><div class="bombTimer"></div><div class="bombCount">10</div></div>
 
-<script src="//plus.google.com/hangouts/_/api/v1/hangout.js"></script>
+<div class="cardTable" id="cardTable" ng-controller="tableController">
 
-<h3>Simple Hangout App</h3>
+    <div class="left">
+        <div class="players">
+            <span class="subTitle">Players:</span>
+                <ul>
+                    <li ng-repeat="player in currentGame.players" class="{{player.state=='playing'?'active':''}} {{playerSelectable(player)?'selectable':''}}">
+                        <span class="turn"><i title="{{getStateTitle(player.state)}}" class="fa {{getStateIcon(player.state)}}" ></i></span>
+                        <span class="name" ng-click="setAsCurrentPlayer(player)" >{{player.name}}</span>
+                        <span class="cardInfo">{{player.cards.length}} cards</span>
+                        <span class="direction"><i class="{{player.state==='playing'?(currentGame.reverse?'fa fa-arrow-circle-up':'fa fa-arrow-circle-down'):''}}">&nbsp;</i> </span>
+                    </li>
+            </ul>
+        </div>
+        <div class="log">
+            <span class="subTitle">History:</span>
+            <ul class="history">
+                <li ng-repeat="entry in currentGame.getLog(10) track by $index">{{entry}}</li>
+            </ul>
+        </div>
+        <a ng-click="startGame()">New Game</a>
+    </div>
+    <div class="right">
+        <div class="top">
+            <div class="deck">
+                <div class="subTitle"><span>Remaining cards:</span></div>
+                <img class="{{canEndRound()?'selectable':''}}" ng-click="endRound()" src="./img/cardback.png">
+                <div class="deckText">{{currentGame.deck.length}} cards on deck</div>
+            </div>
+            <div class="lastPlayedCards">
+                <div class="subTitle"><span>Last played cards:</span></div>
+                <div ng-repeat="card in currentGame.lastPlayedCards(3) track by $index" class="singleCard" style="{{'z-index: '+(100-$index)+'; margin-top: '+($index*15)}}">
+                    <img src="./img/{{card.image}}" >
+                </div>
+            </div>
+        </div>
+        <div class="debug"><b>Debug:</b>
+            <pre>
+                Canplay:{{canPlay()}}
+                WaitforNo:{{currentGame.waitForNope}}
+                SomeoneNoped:{{currentGame.someOneNoped}}
+                Player:{{currentGame.currentPlayer().name}}
+                SecondPlayer:{{currentGame.secondPlayer.name}}
+                playerHasToPlayDisposal:{{currentGame.playerHasToPlayDisposal}}
+        </pre>
+        </div>
 
-<p>
-<input class="button" type="button" value="Show participants!" id="showParticipants"
-    style="visibility:hidden;"
-    onClick="showParticipants()"/>
-</p>
+        <div class="previewCards" ng-show="showFuture">
+            <div>Die nächsten 3 Karten:</div>
+            <div ng-repeat="card in currentGame.deck  | limitTo:3 track by $index" class="singleCard" >
+                <img src="./img/{{card.image}}" >
+            </div>
+            <div><a style="cursor:pointer" ng-click="showFuture=false;">Schließen</a> </div>
+        </div>
+        <div class="yours" ng-Disabled="{{currentGame.currentPlayer().id!==id}}">
+            <div class="play"><button ng-click="playCard()" ng-show="canPlay()">Play card(s)</button><div ng-show="showSelect()" class="selectPlayer">Please select a player</div></div>
+            <div class="yourCards">
+                <div class="infoState">{{getState()}}</div>
+                <div  class="singleCard {{cardIsSelected(card)?'selected':''}}" ng-repeat="card in currentGame.getMyProfile(id).cards track by $index" style="{{cardIsSelected(card)?'bottom:50px;z-index:700':''}}">
+                    <div ng-show="cardSelectable(card)"><i class="cardsuggestion fa fa-long-arrow-down">&nbsp;</i></div>
+                    <img src="./img/{{card.image}}" title="{{card.name}}" ng-click="selectCard(card)"  >
+                </div>
 
-<div id="participantsDiv"></div>
-
-<hr>
-
-<p><a href="http://developers.google.com/+/hangouts/getting-started">Read the docs</a> to learn more about developing hangouts!</a></p>
-
-<script>
-function showParticipants() {
-  var participants = gapi.hangout.getParticipants();
-
-  var retVal = '<p>Participants: </p><ul>';
-
-  for (var index in participants) {
-    var participant = participants[index];
-
-    if (!participant.person) {
-      retVal += '<li>A participant not running this app</li>';
-    }
-    retVal += '<li>' + participant.person.displayName + '</li>';
-  }
-
-  retVal += '</ul>';
-
-  var div = document.getElementById('participantsDiv');
-
-  div.innerHTML = retVal;
-}
-
-function init() {
-  // When API is ready...
-  gapi.hangout.onApiReady.add(
-      function(eventObj) {
-        if (eventObj.isApiReady) {
-          document.getElementById('showParticipants')
-            .style.visibility = 'visible';
-        }
-      });
-}
-
-// Wait for gadget to load.
-gadgets.util.registerOnLoadHandler(init);
-</script>
+            </div>
+            <div ng-hide="{{currentGame.currentPlayer().id===id}}" class="disableCards">&nbsp;</div>
+        </div>
+    </div>
+</div>
 </body>
+</html>
 ]]>
     </Content>
 </Module>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="25d272cf-56a3-46cf-a6c7-1547dcf25866" name="files.oles-cloud" url="http://files.oles-cloud.de">
+        <fileTransfer host="enif.uberspace.de" port="22" rootFolder="/var/www/virtual/ole/files.oles-cloud.de" accessType="SFTP" password="dfeddfebdfe4dfcfdf99dffddfc9dfe1dfc0dff2dff2df99df9cdffadf9fdffedffbdfe6dfc5dfe5" username="ole">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

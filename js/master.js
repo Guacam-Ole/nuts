@@ -25,31 +25,57 @@ var master = function () {
 
 master.prototype = {
     constructor: master,
+    toClients:function(key,value) {
+        // Einzelnes Event an alle Clients
+        if (value===undefined) {
+            value='';
+        }
+        gapi.hangout.data.submitDelta({'isClientMessage':'1', 'isServerMessage':'0', 'actionType':key, 'value': value});
+    },
+    toSingleClient:function(playerId,key, value ) {
+        if (value===undefined) {
+            value='';
+        }
+        // Einzelnes Event an bestimmten Spieler
+        gapi.hangout.data.submitDelta({'isClientMessage':'1', 'isServerMessage':'0', 'actionType':key, 'value': value, 'player':playerId});
+    },
 
     createGame:function() {
         // Spiel erzeugen
         this.log=[];
         this.log.unshift("game initializing");
         masterscope = angular.element($('#cardTable')).scope();
-        this.toClients("gameInit","1");  // Informieren, dass jemand ein Spiel gestartet hat.
+        this.toClients("gameInit");  // Informieren, dass jemand ein Spiel gestartet hat.
         this.readAllCards(this.initData);
     },
 
 
-    toClients:function(key,value) {
-        // Einzelnes Event an alle Clients
-        gapi.hangout.data.submitDelta({'isClientMessage':'1', 'actionType':key, 'value': value});
+    playerJoining:function(playerId) {
+        var player = $.grep(this.players, function(e){ return e.id == playerId; })[0];
+        player.wantsToPlay=true;
+        if (this.status.gameRunning) {
+            // Spiel läuft schon, ab nächster Runde:
+            player.state="watching";
+        } else {
+            // Kann los gehen!
+            player.state="waiting";
+        }
+        this.wait();
     },
-    toSingleClient:function(playerId,key, value) {
-        // Einzelnes Event an bestimmten Spieler
-        gapi.hangout.data.submitDelta({'isClientMessage':'1', 'actionType':key, 'value': value, 'player':playerId});
+    playerWatching:function(playerId) {
+        var player = $.grep(this.players, function(e){ return e.id == playerId; })[0];
+        player.wantsToPlay=false;
+        player.state="watching";
+        this.wait();
     },
 
 
-    initData:function() {
+
+    initData:function(obj) {
         // Daten initialisieren
-        var obj=this;
+        //var obj=this;
         obj.players=[];
+        obj.log=[];
         var participants=gapi.hangout.getParticipants();
         participants.forEach(function(participant) {
             var player={};
@@ -69,7 +95,7 @@ master.prototype = {
 
         obj.log.unshift("Waiting for players...");
         obj.status.isWaiting=true;
-        this.toClients("gameWaiting","1");  // Informieren, dass jemand ein Spiel gestartet hat.
+        obj.toClients("gameWaiting");  // Informieren, dass jemand ein Spiel gestartet hat.
     },
     
     startGame:function() {
@@ -144,13 +170,10 @@ master.prototype = {
         this.log.unshift("cards read");
         var obj=this;
         if (obj.allCards.length===0) {
-            $.getJSON("json/cards.json", function (data) {
-
-                data.cards.forEach(function(card) {
-                    obj.allCards.push(card);
-                });
-                afterReading();
+            allcards.forEach(function(card) {
+                obj.allCards.push(card);
             });
+            afterReading(obj);
         }
     },
     shuffle:function(deck) {
@@ -207,14 +230,15 @@ master.prototype = {
         }
     },
     wait:function() {
-        scope.$apply(function() {
-            scope.wait();
+        masterscope.$apply(function() {
+            masterscope.wait();
         });
     },
     showFuture:function() {
+        /*
         scope.$apply(function() {
             scope.showFuture=true;
-        });
+        });*/
     },
     playCard:function(cards, secondPlayer) {
         var obj=this;
@@ -474,3 +498,76 @@ master.prototype = {
         this.log.unshift("ready to play");
     }
 };
+
+var allcards=
+ [
+        {
+            "type":"bomb",
+            "name":"Bomb",
+            "image":"bomb.png"
+        },
+        {
+            "type":"disposal",
+            "name":"Disposal kit",
+            "image":"disposal.png"
+        },
+        {
+            "type":"thief",
+            "name":"Thief",
+            "image":"thief1.png"
+        },
+        {
+            "type":"thief",
+            "name":"Thief",
+            "image":"thief2.png"
+        },
+        {
+            "type":"thief",
+            "name":"Thief",
+            "image":"thief3.png"
+        },
+        {
+            "type":"thief",
+            "name":"Thief",
+            "image":"thief4.png"
+        },
+        {
+            "type":"thief",
+            "name":"Thief",
+            "image":"thief5.png"
+        },
+        {
+            "type":"force",
+            "name":"Force to draw",
+            "image":"attack.png"
+        },
+        {
+            "type":"no",
+            "name":"No",
+            "image":"no.png"
+        },
+        {
+            "type":"sleep",
+            "name":"Sleep",
+            "image":"sleep.png"
+        },
+        {
+            "type":"future",
+            "name":"See the future",
+            "image":"future.png"
+        },
+        {
+            "type":"shuffle",
+            "name":"Shuffle",
+            "image":"shuffle.png"
+        }, {
+            "type":"gift",
+            "name":"Happy Birthday",
+            "image":"gift.png"
+        },
+        {
+            "type":"reverse",
+            "name":"change play direction",
+            "image":"reverse.png"
+        }
+    ];

@@ -13,7 +13,6 @@ angular.module('boomApp', [])
             $scope.master=new master();
             $scope.master.createGame();
             $scope.thisIsMaster=true;
-
         };
 
         $scope.playerCounts=function() {
@@ -28,13 +27,7 @@ angular.module('boomApp', [])
                     noaddon: stats.noAddon
                 }
             }
-        }
-
-        $scope.gameStarted=function(game) {
-            $scope.currentGame=game;
         };
-   //     $scope.playedCards=[];
-        // $scope.currentGame=new game();
 
         $scope.setAsCurrentPlayer=function(player) {
             if ($scope.waitingForPlayerSelection!==undefined && $scope.playerSelectable(player)) {
@@ -248,44 +241,7 @@ angular.module('boomApp', [])
             $scope.currentGame.initPlayers(playerIds,playerNames,playerStates);
         };
         $scope.events=function() {
-            gapi.hangout.data.onStateChanged(function (event ) {
-                if (!$scope.currentGame.iAmTheMaster) {
-                    $scope.getGameState();
-                } else {
-                    if (event.state['isAction']==='1') {
-                        switch (event.state["actionType"]) {
-                            case "drawCard":
-                                $scope.currentGame.drawCard(JSON.parse(event.state["player"]));
-                                break;
-                            case "playCard":
-                                $scope.currentGame.playCard(JSON.parse(event.state["cards"]), JSON.parse(event.state["secondPlayer"]));
-                                break;
-                            case "playNope":
-                                $scope.currentGame.playNope(event.state["playerId"], JSON.parse(event.state["card"]));
-                                break;
-                            case "playerWatching":
-                                $scope.currentGame.addWatch(event.state["playerId"]);
-                                break;
-                            case "playerJoining":
-                                $scope.currentGame.addPlayer(event.state["playerId"]);
-                                break;
-                        }
-                    }
-                }
-            });
-        };
-        $scope.getGameState=function() {
-                var state = gapi.hangout.data.getState();
-                $scope.currentGame.players=JSON.parse(state["players"]);
-                $scope.currentGame.deck=JSON.parse(state["deck"]);
-                $scope.currentGame.playedCards=JSON.parse(state["playedCards"]);
-                $scope.currentGame.log=JSON.parse(state["log"]);
-                $scope.currentGame.waitForNope=JSON.parse(state["waitForNope"]);
-                $scope.currentGame.someOneNoped=JSON.parse(state["someOneNoped"]);
-                $scope.currentGame.secondPlayer=JSON.parse(state["secondPlayer"]);
-                $scope.currentGame.numRounds=JSON.parse(state["numRounds"]);
-                $scope.currentGame.reverse=JSON.parse(state["reverse"]);
-                $scope.gameRunning=state["gameRunning"];
+
         };
 
         $scope.startGame=function() {
@@ -305,11 +261,25 @@ angular.module('boomApp', [])
             $scope.currentGame.watchGame($scope.id);
             $scope.alreadyPlaying=true;
         };
+        $scope.toServer=function(key,value) {
+            if (value===undefined) {
+                value='';
+            }
+            gapi.hangout.data.submitDelta({'isServerMessage':'1', 'isClientMessage':'0', 'actionType':key, 'value': value, 'player':$scope.id});
+        };
 
         $scope.joinGame= function () {
-            $scope.currentGame.joinGame($scope.id);
-            $scope.alreadyPlaying=true;
+            $scope.toServer("joinGame", gapi.hangout.getLocalParticipantId());
+        };
+
+        $scope.watchGame= function () {
+            $scope.toServer("watchGame", gapi.hangout.getLocalParticipantId());
         };
 
 
+
+
+
     });
+
+

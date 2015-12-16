@@ -6,25 +6,30 @@
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+    <script src="https://plus.google.com/hangouts/_/api/v1/hangout.js"></script>
     <script src="js/game.js"></script>
+    <script src="js/master.js"></script>
     <script src="js/events.js"></script>
     <script src="js/app.js"></script>
     <script src="js/circle-progress.js"></script>
 </head>
 <body>
-<div class="init" ng-hide="alreadyPlaying">
-    <div class="dialog-overlay"></div>
-    <div class="dialog-box">
-        <div class="dialog-content">
-    <div>Don't go nuts!<br/><span class="subtitle">wanna play?</span></div>
 
-    <div><a ng-click="startNewGame()" class="button big {{gameRunning?'gray':'blue'}}">Start new game<span>Should only used by ONE player</span></a><a ng-click="joinGame()" class="button big {{gameRunning?'blue':'gray'}}">Join game<span>play with others</span></a><a ng-click="watchGame()" class="button big {{gameRunning?'blue':'gray'}}">Watch the game<span>Just watch others play</span></a></div>
-    </div></div>
-
-</div>
 
 <div class="cardTable" id="cardTable" ng-controller="tableController">
+    <div class="init" ng-hide="alreadyPlaying">
+        <div class="dialog-overlay"></div>
+        <div class="dialog-box">
+            <div class="dialog-content">
+                <div>Don't go nuts!<br/><span class="subtitle">wanna play?</span></div>
 
+                <div class="startSelect" ng-hide="thisIsMaster"><a ng-click="initGame()" class="button big {{gameRunning?'gray':'blue'}}">Start new game<span>Should only used by ONE player</span></a><a ng-click="joinGame()" class="button big {{gameRunning?'blue':'gray'}}">Join game<span>play with others</span></a><a ng-click="watchGame()" class="button big {{gameRunning?'blue':'gray'}}">Watch the game<span>Just watch others play</span></a></div>
+                <div class="masterWait" ng-show="thisIsMaster">
+                    <div><strong>Waiting for players:</strong><br/>Users total: <b> {{playerCounts().total}}</b>, Players: <b>{{playerCounts().waiting}}</b>, Voyeurs: <b>{{playerCounts().watching}}</b>, Addin not loaded: <b>{{playerCounts.noaddon}}</b></div>
+                    <a ng-click="startNewGame()" class="button big {{playerCounts().waiting>1?'blue':'gray'}}">Start the game<span>Can't wait any longer</span></a></div>
+            </div></div>
+
+    </div>
     <div class="left">
         <div class="players">
             <span class="subTitle">Players:</span>

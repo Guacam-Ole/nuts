@@ -5,58 +5,31 @@ angular.module('boomApp', [])
         $scope.selectedCards=[];
         $scope.showFuture=false;
         $scope.gameRunning=false;
+        $scope.thisIsMaster=false;
         $scope.alreadyPlaying=false;
         $scope.waitingForPlayerSelection=undefined;
-        $scope.players= [
-            {
-                "id":"1",
-                "name":"Lee",
-                "cards":[],
-                "state":"watching"
-            },
-            {
-                "id":"2",
-                "name":"Clementine",
-                "cards":[],
-                "state":"waiting"
-            },
-            {
-                "id":"3",
-                "name":"Hershell",
-                "cards":[],
-                "state":"waiting"
-            },
-            {
-                "id":"4",
-                "name":"Shawn",
-                "cards":[],
-                "state":"playing"
-            },
-            {
-                "id":"5",
-                "name":"Kenny",
-                "cards":[],
-                "state":"waiting"
-            },
-            {
-                "id":"6",
-                "name":"Glenn",
-                "cards":[],
-                "state":"bombed"
-            },
-            {
-                "id":"7",
-                "name":"Christa",
-                "cards":[],
-                "state":"bombed"
-            },
-            {
-                "id":"8",
-                "name":"Omid",
-                "cards":[],
-                "state":"waiting"
+
+        $scope.initGame=function() {
+            $scope.master=new master();
+            $scope.master.createGame();
+            $scope.thisIsMaster=true;
+
+        };
+
+        $scope.playerCounts=function() {
+            if ($scope.master===undefined) {
+                return {total:0, waiting:0, watching:0,noaddon:0};
+            } else {
+                var stats=$scope.master.playerStats();
+                return {
+                    total: stats.total,
+                    waiting: stats.waiting,
+                    watching: stats.watching,
+                    noaddon: stats.noAddon
+                }
             }
-        ];
+        }
+
         $scope.gameStarted=function(game) {
             $scope.currentGame=game;
         };

@@ -34,11 +34,11 @@ angular.module('boomApp', [])
             $scope.currentGame=game;
         };
    //     $scope.playedCards=[];
-        $scope.currentGame=new game();
+        // $scope.currentGame=new game();
 
         $scope.setAsCurrentPlayer=function(player) {
             if ($scope.waitingForPlayerSelection!==undefined && $scope.playerSelectable(player)) {
-                $scope.currentGame.playCard($scope.selectedCards,player);
+              //  $scope.currentGame.playCard($scope.selectedCards,player);
                 $scope.selectedCards=[];
                 $scope.waitingForPlayerSelection=undefined;
             } else {

@@ -144,7 +144,7 @@ master.prototype = {
         this.log.unshift("cards read");
         var obj=this;
         if (obj.allCards.length===0) {
-            $.getJSON("https://cdn.rawgit.com/OleAlbers/nuts/master/json/cards.json", function (data) {
+            $.getJSON("json/cards.json", function (data) {
 
                 data.cards.forEach(function(card) {
                     obj.allCards.push(card);

@@ -21,7 +21,7 @@
 
 <html ng-app="boomApp">
 <head>
-    <base href="https://rawgit.com/OleAlbers/nuts/master/" >
+    <base href="https://rawgit.com/OleAlbers/nuts/master/" > <!-- TODO: Produktivadresse wenn Testen vorbei. JSON-Url in MASTER.JS nicht vergessen! -->
     <meta charset="utf-8"/>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="https://rawgit.com/OleAlbers/nuts/master/css/boom.css">

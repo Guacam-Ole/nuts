@@ -24,14 +24,14 @@
     <base href="https://files.oles-cloud.de/nuts/" > <!-- TODO: Produktivadresse wenn Testen vorbei. JSON-Url in MASTER.JS nicht vergessen! -->
     <meta charset="utf-8"/>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
-    <link rel="stylesheet" href="https://rawgit.com/OleAlbers/nuts/master/css/boom.css">
+    <link rel="stylesheet" href="https://files.oles-cloud.de/nuts/css/boom.css?v=2">
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
     <script src="//plus.google.com/hangouts/_/api/v1/hangout.js"></script>
-    <script src="js/master.js?v=2"></script>
-    <script src="js/servant.js?v=5"></script>
-    <script src="js/app.js?v=2"></script>
+    <script src="js/master.js?v=5"></script>
+    <script src="js/servant.js?v=6"></script>
+    <script src="js/app.js?v=7"></script>
     <script src="js/events.js?v=2"></script>
 
 <!--     <script src="js/circle-progress.js"></script> -->
@@ -43,7 +43,7 @@
 
 
 <div class="cardTable" id="cardTable" ng-controller="tableController" >
- <div class="init" ng-hide="alreadyPlaying">
+ <div class="init" ng-hide="alreadyPlaying()">
         <div class="dialog-overlay"></div>
         <div class="dialog-box">
             <div class="dialog-content">
@@ -55,37 +55,36 @@
                     <a ng-show="master" ng-click="startNewGame()" class="button big {{servant.playerStats().waiting>1?'blue':'gray'}}">Start the game<span>Can't wait any longer</span></a></div>
             </div></div>
     </div>
-    <div ng-show="servant.status.isRunning">
+    <div ng-show="alreadyPlaying()">
     <div class="left">
         <div class="players">
             <span class="subTitle">Players:</span>
                 <ul>
-                    <li ng-repeat="player in currentGame.players" class="{{player.state=='playing'?'active':''}} {{playerSelectable(player)?'selectable':''}}">
+                    <li ng-repeat="player in servant.players" class="{{player.state=='playing'?'active':''}} {{playerSelectable(player)?'selectable':''}}">
                         <span class="turn"><i title="{{getStateTitle(player.state)}}" class="fa {{getStateIcon(player.state)}}" ></i></span>
                         <span class="name" ng-click="setAsCurrentPlayer(player)" >{{player.name}}</span>
                         <span class="cardInfo">{{player.cards.length}} cards</span>
-                        <span class="direction"><i class="{{player.state==='playing'?(currentGame.reverse?'fa fa-arrow-circle-up':'fa fa-arrow-circle-down'):''}}">&nbsp;</i> </span>
+                        <span class="direction"><i class="{{player.state==='playing'?(servant.reverse?'fa fa-arrow-circle-up':'fa fa-arrow-circle-down'):''}}">&nbsp;</i> </span>
                     </li>
             </ul>
         </div>
         <div class="log">
             <span class="subTitle">History:</span>
             <ul class="history">
-                <li ng-repeat="entry in currentGame.getLog(10) track by $index">{{entry}}</li>
+                <li ng-repeat="entry in servant.log track by $index">{{entry}}</li>
             </ul>
         </div>
-        <a ng-click="startGame()">New Game</a>
     </div>
     <div class="right">
         <div class="top">
             <div class="deck">
                 <div class="subTitle"><span>Remaining cards:</span></div>
                 <img class="{{canEndRound()?'selectable':''}}" ng-click="endRound()" src="./img/cardback.png">
-                <div class="deckText">{{currentGame.deck.length}} cards on deck</div>
+                <div class="deckText">{{servant.deckCount}} cards on deck</div>
             </div>
             <div class="lastPlayedCards">
                 <div class="subTitle"><span>Last played cards:</span></div>
-                <div ng-repeat="card in currentGame.lastPlayedCards(3) track by $index" class="singleCard" style="{{'z-index: '+(100-$index)+'; margin-top: '+($index*15)}}">
+                <div ng-repeat="card in servant.playedCards track by $index" class="singleCard" style="{{'z-index: '+(100-$index)+'; margin-top: '+($index*15)}}">
                     <img src="./img/{{card.image}}" >
                 </div>
             </div>
@@ -93,32 +92,33 @@
         <div class="debug"><b>Debug:</b>
             <pre>
                 Canplay:{{canPlay()}}
-                WaitforNo:{{currentGame.waitForNope}}
-                SomeoneNoped:{{currentGame.someOneNoped}}
-                Player:{{currentGame.currentPlayer().name}}
-                SecondPlayer:{{currentGame.secondPlayer.name}}
-                playerHasToPlayDisposal:{{currentGame.playerHasToPlayDisposal}}
+                WaitforNo:{{servant.waitForNope}}
+                SomeoneNoped:{{servant.someOneNoped}}
+                Player:{{servant.currentPlayer().name}}
+                SecondPlayer:{{servant.secondPlayer.name}}
+                playerHasToPlayDisposal:{{servant.playerHasToPlayDisposal}}
+                myTurn:{{myTurn()}}
         </pre>
         </div>
 
-        <div class="previewCards" ng-show="showFuture">
+        <div class="previewCards" ng-show="servant.showFuture">
             <div>Die nächsten 3 Karten:</div>
-            <div ng-repeat="card in currentGame.deck  | limitTo:3 track by $index" class="singleCard" >
+            <div ng-repeat="card in servant.future track by $index" class="singleCard" >
                 <img src="./img/{{card.image}}" >
             </div>
             <div><a style="cursor:pointer" ng-click="showFuture=false;">Schließen</a> </div>
         </div>
-        <div class="yours" ng-Disabled="{{currentGame.currentPlayer().id!==id}}">
+        <div class="yours" ng-Disabled="!myTurn()">
             <div class="play"><button ng-click="playCard()" ng-show="canPlay()">Play card(s)</button><div ng-show="showSelect()" class="selectPlayer">Please select a player</div></div>
             <div class="yourCards">
                 <div class="infoState">{{getState()}}</div>
-                <div  class="singleCard {{cardIsSelected(card)?'selected':''}}" ng-repeat="card in currentGame.getMyProfile(id).cards track by $index" style="{{cardIsSelected(card)?'bottom:50px;z-index:700':''}}">
+                <div  class="singleCard {{cardIsSelected(card)?'selected':''}}" ng-repeat="card in servant.me().cards track by $index" style="{{cardIsSelected(card)?'bottom:50px;z-index:700':''}}">
                     <div ng-show="cardSelectable(card)"><i class="cardsuggestion fa fa-long-arrow-down">&nbsp;</i></div>
                     <img src="./img/{{card.image}}" title="{{card.name}}" ng-click="selectCard(card)"  >
                 </div>
 
             </div>
-            <div ng-hide="{{currentGame.currentPlayer().id===id}}" class="disableCards">&nbsp;</div>
+            <div ng-hide="myTurn()" class="disableCards">&nbsp;</div>
         </div>
     </div>
 </div>

@@ -1,9 +1,9 @@
 {
   "cards":   [
     {
-      "type":"bomb",
-      "name":"Bomb",
-      "image":"bomb.png"
+      "type":"nut",
+      "name":"Hazelnut",
+      "image":"nut.png"
     },
     {
       "type":"disposal",

@@ -137,7 +137,7 @@ game.prototype = {
     playerStats:function() {
         var watchCount=0;
         var waitCount=0;
-        var bombCount=0;
+        var nutsCount=0;
         var playCount=0;
         var noAddonCount=0;
 
@@ -149,8 +149,8 @@ game.prototype = {
                 case "watching":
                     watchCount++;
                     break;
-                case "bombed":
-                    bombCount++;
+                case "nuts":
+                    nutsCount++;
                     break;
                 case "playing":
                     playCount++;
@@ -164,7 +164,7 @@ game.prototype = {
             total: this.players.length,
             waiting: waitCount,
             watching:watchCount,
-            bombed:bombCount,
+            nuts:nutsCount,
             playing:playCount,
             noAddon:noAddonCount
         }
@@ -182,48 +182,17 @@ game.prototype = {
 
 
 
-    init:function() {
-    },
-
-
-    getDeckCount:function() {
-
-    },
-
-    lastPlayedCards:function(count) {
-
-    },
-    getMyProfile:function(playerId) {
-
-    },
-    readAllCards:function() {
-
-    },
-    shuffle:function(deck) {
-
-    },
-    addCardsToDeckdra:function(card, number) {
-
-    },
     getUid:function() {
+        return ("0000" + (Math.random()*Math.pow(36,4) << 0).toString(36)).slice(-4);
     },
-    drawCard:function(player) {
-    },
-    wait:function() {
-        scope.$apply(function() {
-            scope.wait();
-        });
-    },
-    showFuture:function() {
-    },
-    playCard:function(cards, secondPlayer) {
+
+
+    playCard:function(card, secondPlayer) {
     },
     playNope:function(playerId, card) {
     },
-    playCardFinally:function(card, doWait) {
-    },
-    getLog:function(count) {
-    },
+
+
     currentPlayer:function() {
         return $.grep(this.players, function(e){ return e.state == "playing"; })[0];
     }

@@ -9,9 +9,10 @@ var master = function () {
     //GameStatus:
     this.status={
         masterId:null,
+        playerHasToPlayDisposal:false,
         waitForNope:false,      // Darauf warten, dass jemand "Nope" spielt
         someOneNoped:false,     // Jemand hat "Nope" gespielt?
-        secondPlayer:false,     // Zweiter Spieler für Aktion
+        secondPlayerId:undefined,     // Zweiter Spieler für Aktion
         reverse:false,          // Umgekehrte Reihenfolge?
         isRunning:false,        // Spiel läuft?
         isWaiting:false,        // Warten auf Spieler?
@@ -142,6 +143,7 @@ master.prototype = {
         this.status.isWaiting=false;
         var playerCount=this.countPlayers();
         this.filldeck(playerCount);
+        this.nextPlayer();
     },
     
     
@@ -149,12 +151,12 @@ master.prototype = {
     countPlayers:function() {
         // Zählen, wie wiele aktive Spieler existieren
         var stats=this.playerStats();
-        return stats.waiting+stats.playing+stats.bombed;
+        return stats.waiting+stats.playing+stats.nuts;
     },
     playerStats:function() {
         var watchCount=0;
         var waitCount=0;
-        var bombCount=0;
+        var nutsCount=0;
         var playCount=0;
         var noAddonCount=0;
 
@@ -166,8 +168,8 @@ master.prototype = {
                 case "watching":
                     watchCount++;
                     break;
-                case "bombed":
-                    bombCount++;
+                case "nuts":
+                    nutsCount++;
                     break;
                 case "playing":
                     playCount++;
@@ -181,7 +183,7 @@ master.prototype = {
             total: this.players.length,
             waiting: waitCount,
             watching:watchCount,
-            bombed:bombCount,
+            nuts:nutsCount,
             playing:playCount,
             noAddon:noAddonCount
         }
@@ -248,19 +250,19 @@ master.prototype = {
             this.log.unshift(player.name + " took one card from the deck (ending his turn)");
         }
         var card=this.deck.shift();
-        if (card.type==="bomb")  {
+        if (card.type==="nut")  {
             // Sofort Spielen
             this.log.unshift(player.name + " is about to go nuts!");
             this.playedCards.unshift(card);
             // Schauen, ob der Spieler einen Nussknacker hat:
             var disposal = $.grep(player.cards, function(e){ return e.type == "disposal"; });
             if (disposal.length>0) {
-                this.playerHasToPlayDisposal=true;
+                this.status.playerHasToPlayDisposal=true;
                 return false;
             }
             else {
                 // Raus!
-                player.state="bombed";
+                player.state="nuts";
                 this.log.unshift(player.name + " has gone nuts!");
                 return true;
             }
@@ -275,15 +277,18 @@ master.prototype = {
         });
     },
     showFuture:function() {
-        /*
-        scope.$apply(function() {
-            scope.showFuture=true;
-        });*/
+
     },
-    playCard:function(cards, secondPlayer) {
+    getSecondPlayer:function() {
+        if (this.status.secondPlayerId===undefined) {
+            return undefined;
+        }
+        var secondplayer= $.grep(this.players, function(e){ return e.id == this.status.secondPlayerId; })[0];
+    },
+    playCard:function(cards, secondPlayerId) {
         var obj=this;
-        obj.waitForNope=false;
-        obj.secondPlayer=secondPlayer;
+        obj.status.waitForNope=false;
+        obj.status.secondPlayerId=secondPlayerId;
         obj.playerHasToPlayDisposal=false;
 
         var player=this.currentPlayer();
@@ -308,6 +313,7 @@ master.prototype = {
                 obj.waitForNope=true;
                 break;
         }
+        var secondPlayer=obj.getSecondPlayer();
         if (secondPlayer!==undefined) {
             this.log.unshift(player.name+" chose "+secondPlayer.name+" as the victim");
         }
@@ -343,57 +349,58 @@ master.prototype = {
             }
         }
     },
-    playCardFinally:function(card, doWait) {
+    playCardFinally:function(card) {
         this.waitForNope=false;
         if (this.someOneNoped && card.type!="force") {
             this.someOneNoped=false;
             this.wait();
             return; // nix tun
         }
-        if (card.type==="gift" && this.offeredGift===undefined) {
-            this.waitForGift=true;
+        if (card.type==="gift" && this.status.offeredGift===undefined) {
+            this.status.waitForGift=true;
             this.setTimeout(card); // Solange warten, bis Spieler Karte ausgewählt hat.
             this.wait();
             return;
         }
+        var secondPlayer=this.getSecondPlayer();
         switch (card.type) {
             case "disposal":
                 // Nuss entschärft
                 this.log.unshift(this.currentPlayer().name+" didn't go nuts");
-                this.nextPlayer(doWait);
+                this.nextPlayer();
                 break;
             case "thief":
                 // Zufallskarte stehlen
-                this.log.unshift(this.currentPlayer().name+" took a card from "+this.secondPlayer.name);
+                this.log.unshift(this.currentPlayer().name+" took a card from "+secondPlayer.name);
                 // Zufällige Karte von Spieler nehmen:
-                var cardId = Math.floor(Math.random() * this.secondPlayer.cards.length);
-                var newcard = this.secondPlayer.cards[cardId];
-                this.secondPlayer.cards.splice(cardId, 1);
+                var cardId = Math.floor(Math.random() * secondPlayer.cards.length);
+                var newcard = secondPlayer.cards[cardId];
+                secondPlayer.cards.splice(cardId, 1);
                 this.currentPlayer().cards.push(newcard);
                 this.wait();    // Status aktualisieren
                 break;
             case "force":
                 // Nächster Spieler muss zwei Runden spielen
-                this.log.unshift(this.currentPlayer().name+" forces "+this.secondPlayer.name+" to play two rounds");
+                this.log.unshift(this.currentPlayer().name+" forces "+secondPlayer.name+" to play two rounds");
                 if (this.someOneNoped) {
                     this.numRounds=1;
                 } else {
                     this.numRounds = 2;   // Nächster Spieler muss zweimal ziehen
                 }
-                this.nextPlayer(doWait);
+                this.nextPlayer();
                 break;
             case "sleep":
                 // Glatt verpennt. Keine Karte ziehen am Ende
                 this.log.unshift(this.currentPlayer().name+" sleeps missing his turn");
-                this.nextPlayer(doWait);
+                this.nextPlayer();
                 break;
             case "gift":
                 // "Geschenk" von anderem Spiele annehmen:
-                this.log.unshift(this.currentPlayer().name+" receives a gift from "+this.secondPlayer.name);
-                var newcard = this.secondPlayer.cards[this.offeredGift];
-                this.secondPlayer.cards.splice(this.offeredGift, 1);
+                this.log.unshift(this.currentPlayer().name+" receives a gift from "+secondPlayer.name);
+                var newcard = secondPlayer.cards[this.status.offeredGift];
+                secondPlayer.cards.splice(this.status.offeredGift, 1);
                 this.currentPlayer().cards.push(newcard);
-                this.offeredGift=undefined;
+                this.status.offeredGift=undefined;
                 this.wait();    // Status aktualisieren
                 break;
             case "shuffle":
@@ -412,8 +419,8 @@ master.prototype = {
                 this.wait();
                 break;
         }
-        this.someOneNoped=false;
-        this.waitForGift=false;
+        this.status.someOneNoped=false;
+        this.status.waitForGift=false;
     },
     
     getNextPlayer:function(currentPlayerIndex) {
@@ -437,14 +444,14 @@ master.prototype = {
                 } else {
                     nextPlayerIndex++;
                 }
-
             }
         }
+        return nextPlayerIndex;
     },
-    nextPlayer:function(doWait) {
+    nextPlayer:function() {
         var obj=this;
         var counter=0;
-        var currentPlayerIndex;
+        var currentPlayerIndex=0;
 
         this.players.forEach(function(player) {
             if (player.state==="playing") {
@@ -453,9 +460,10 @@ master.prototype = {
             }
             counter++;
         });
+
         var nextPlayerIndex=this.getNextPlayer(currentPlayerIndex);
         obj.players[nextPlayerIndex].state="playing";
-        obj.toSingleClient(obj.players[nextPlayerIndex].id,"yourturn","1");
+        obj.toClients();
     },
     
   
@@ -485,7 +493,7 @@ master.prototype = {
         var obj=this;
 
         // Kartentypen:
-        var bomb = $.grep(obj.allCards, function(e){ return e.type == "bomb"; })[0];
+        var nut = $.grep(obj.allCards, function(e){ return e.type == "nut"; })[0];
         var disposal = $.grep(obj.allCards, function(e){ return e.type == "disposal"; })[0];
         var force = $.grep(obj.allCards, function(e){ return e.type == "force"; })[0];
         var nope = $.grep(obj.allCards, function(e){ return e.type == "no"; })[0];
@@ -511,11 +519,12 @@ master.prototype = {
 
         obj.shuffle(obj.deck);
 
-        var playerIndex=getNextPlayer(0);
+        var playerIndex=0;
         // Karten für Spieler:
         for (i=0;i<numPlayers; i++) {
+            playerIndex=obj.getNextPlayer(playerIndex);
             var player=obj.players[playerIndex];
-            player.cards={};
+            player.cards=[];
             player.cards.push(disposal);
             for (cards=0; cards<4; cards++) {
                 obj.drawCard(player);
@@ -523,8 +532,8 @@ master.prototype = {
             //obj.players.push(player);
         }
 
-        // Bomben und Entschärfer wieder ins Deck:
-        obj.addCardsToDeck(bomb,numPlayers-1);
+        // Nüsse und Knacker wieder ins Deck:
+        obj.addCardsToDeck(nut,numPlayers-1);
         if (numPlayers===2) {
             obj.addCardsToDeck(disposal,2);
         } else {
@@ -543,9 +552,9 @@ master.prototype = {
 var allcards=
  [
         {
-            "type":"bomb",
-            "name":"Bomb",
-            "image":"bomb.png"
+            "type":"nut",
+            "name":"Hazelnut",
+            "image":"nut.png"
         },
         {
             "type":"disposal",

@@ -89,7 +89,7 @@ game.prototype = {
             this.log.unshift(player.name + " took one card from the deck (ending his turn)");
         }
         var card=this.deck.shift();
-        if (card.type==="bomb")  {
+        if (card.type==="nut")  {
             // Sofort Spielen
             this.log.unshift(player.name + " is about to go nuts!");
             this.playedCards.unshift(card);
@@ -101,7 +101,7 @@ game.prototype = {
             }
             else {
                 // Raus!
-                player.state="bombed";
+                player.state="nuts";
                 this.log.unshift(player.name + " has gone nuts!");
                 return true;
             }
@@ -354,7 +354,7 @@ game.prototype = {
         var obj=this;
 
         // Kartentypen:
-        var bomb = $.grep(obj.allCards, function(e){ return e.type == "bomb"; })[0];
+        var nut = $.grep(obj.allCards, function(e){ return e.type == "nut"; })[0];
         var disposal = $.grep(obj.allCards, function(e){ return e.type == "disposal"; })[0];
         var force = $.grep(obj.allCards, function(e){ return e.type == "force"; })[0];
         var nope = $.grep(obj.allCards, function(e){ return e.type == "no"; })[0];
@@ -392,8 +392,8 @@ game.prototype = {
             obj.players.push(player);
         }
 
-        // Bomben und Entschärfer wieder ins Deck:
-        obj.addCardsToDeck(bomb,numPlayers-1);
+        // Nüsse und Knacker wieder ins Deck:
+        obj.addCardsToDeck(nut,numPlayers-1);
         if (numPlayers===2) {
             obj.addCardsToDeck(disposal,2);
         } else {

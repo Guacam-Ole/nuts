@@ -82,7 +82,7 @@ li.active {
 .disableCards {
     width:100%;
     position: absolute;
-    background: green;
+    background: rgba(255, 255, 255, 0.71) none repeat scroll 0%;
     height: 200px;
     z-index: 600;
     bottom: 0px;
@@ -112,7 +112,7 @@ li.active {
     height: 100px;
     display: none;
 }
-.bombCount {
+.nutCount {
     position: relative;
     top: -94px;
     left: 30px;

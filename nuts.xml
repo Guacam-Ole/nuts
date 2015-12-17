@@ -78,12 +78,10 @@
     <div class="right">
         <div class="top">
             <div class="deck">
-                <div class="subTitle"><span>Remaining cards:</span></div>
                 <img class="{{canEndRound()?'selectable':''}}" ng-click="endRound()" src="./img/cardback.png">
-                <div class="deckText">{{servant.deckCount}} cards on deck</div>
+                <div class="deckText"><span>{{servant.status.deckCount}}</span><br/>cards</div>
             </div>
             <div class="lastPlayedCards">
-                <div class="subTitle"><span>Last played cards:</span></div>
                 <div ng-repeat="card in servant.playedCards track by $index" class="singleCard" style="{{'z-index: '+(100-$index)+'; margin-top: '+($index*15)}}">
                     <img src="./img/{{card.image}}" >
                 </div>
@@ -109,9 +107,9 @@
             <div><a style="cursor:pointer" ng-click="showFuture=false;">Schließen</a> </div>
         </div>
         <div class="yours" ng-Disabled="!myTurn()">
-            <div class="play"><button ng-click="playCard()" ng-show="canPlay()">Play card(s)</button><div ng-show="showSelect()" class="selectPlayer">Please select a player</div></div>
+            <div class="playCards"><a class="button {{canPlay()?'blue':'gray'}}" ng-click="playCard()">Play card(s)</a><div ng-show="showSelect()" class="selectPlayer">Please select a player</div></div>
             <div class="yourCards">
-                <div class="infoState">{{getState()}}</div>
+                <div class="infoState alert-box {{getState().mood}}"><div>{{getState().message}}</div></div>
                 <div  class="singleCard {{cardIsSelected(card)?'selected':''}}" ng-repeat="card in servant.me().cards track by $index" style="{{cardIsSelected(card)?'bottom:50px;z-index:700':''}}">
                     <div ng-show="cardSelectable(card)"><i class="cardsuggestion fa fa-long-arrow-down">&nbsp;</i></div>
                     <img src="./img/{{card.image}}" title="{{card.name}}" ng-click="selectCard(card)"  >

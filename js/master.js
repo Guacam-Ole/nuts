@@ -244,10 +244,11 @@ master.prototype = {
         // SO: http://stackoverflow.com/questions/6248666/how-to-generate-short-uid-like-ax4j9z-in-js
         return ("0000" + (Math.random()*Math.pow(36,4) << 0).toString(36)).slice(-4)
     },
-    drawCard:function(player) {
+    drawCard:function(player,dontLog) {
         // Karte aus Deck ziehen. Return: Runde beendet?
-        if (player.name!==undefined) {
-            this.log.unshift(player.name + " took one card from the deck (ending his turn)");
+
+        if (player.name!==undefined && !dontLog) {
+            this.log.unshift(player.name + " took one card");
         }
         var card=this.deck.shift();
         if (card.type==="nut")  {
@@ -465,9 +466,7 @@ master.prototype = {
         obj.players[nextPlayerIndex].state="playing";
         obj.toClients();
     },
-    
-  
-    
+
     getLog:function(count) {
         if (this.log===undefined) {
             return [];
@@ -527,7 +526,7 @@ master.prototype = {
             player.cards=[];
             player.cards.push(disposal);
             for (cards=0; cards<4; cards++) {
-                obj.drawCard(player);
+                obj.drawCard(player, true);
             }
             //obj.players.push(player);
         }

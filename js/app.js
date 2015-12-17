@@ -94,20 +94,40 @@ angular.module('boomApp', [])
         $scope.getState=function() {
 
             if ($scope.servant===undefined) {
-                return "initializing";
-            } else if ($scope.servant.allCards===undefined || $scope.servant.allCards.length===0) {
-                return "waiting for game to start";
+                return {
+                    mood: 'idle wait',
+                    message: 'initializing'
+                }
+            } else if (!$scope.servant.status.isRunning) {
+                return {
+                    mood: 'idle wait',
+                    message: 'waiting for game to start'
+                };
             } else if ($scope.servant.players===undefined  || $scope.servant.players.length===0) {
-                return "waiting for players";
-            } else if ($scope.servant.currentPlayer().id===$scope.servant.id) {
-                return "Please play a card or select a card from the deck to end your turn";
-            } else if ($scope.servant.status.waitForGift && $scope.servant.status.secondPlayerId===$scope.servant.id)
-            {
-                return "please select a card you want to offer as a gift"
-            }
-            else
-            {
-                return "waiting for "+$scope.servant.currentPlayer().name;
+                return {
+                    mood: 'idle wait',
+                    message: 'waiting for players'
+                };
+            } else if ($scope.servant.currentPlayer().id===$scope.servant.id ) {
+                return {
+                    mood: 'success play',
+                    message: 'Please play a card or select a card from the deck to end your turn'
+                };
+            } else if ($scope.servant.status.waitForGift && $scope.servant.status.secondPlayerId===$scope.servant.id) {
+                return {
+                    mood: 'success gift',
+                    message: 'please select a card you want to offer as a gift'
+                };
+            } else if ($scope.servant.status.waitForNope) {
+                return {
+                    mood: 'success play',
+                    message: 'play the "no" - card if you want to (and have one)'
+                };
+            } else {
+                return {
+                    mood: 'idle wait',
+                    message: "waiting for "+$scope.servant.currentPlayer().name
+                };
             }
         };
 
@@ -174,6 +194,9 @@ angular.module('boomApp', [])
             $scope.selectedCards=[];
         };
         $scope.playCard=function() {
+            if (!$scope.canPlay()) {
+                return;
+            }
             if ($scope.servant.currentPlayer().id===$scope.servant.id) {
                 switch ($scope.selectedCards[0].type) {
                     case "thief":

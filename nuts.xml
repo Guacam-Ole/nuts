@@ -29,15 +29,12 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
     <script src="//plus.google.com/hangouts/_/api/v1/hangout.js"></script>
-<!--    <script src="js/master.js"></script>
-    <script src="js/events.js"></script>
-    <script src="js/app.js"></script>-->
-    <script>document.write('<script src="js/master.js?dev=' + Math.floor(Math.random() * 100) + '"\><\/script>');</script>
-    <script>document.write('<script src="js/events.js?dev=' + Math.floor(Math.random() * 100) + '"\><\/script>');</script>
-    <script>document.write('<script src="js/app.js?dev=' + Math.floor(Math.random() * 100) + '"\><\/script>');</script>
+    <script src="js/master.js?v=2"></script>
+    <script src="js/servant.js?v=5"></script>
+    <script src="js/app.js?v=2"></script>
+    <script src="js/events.js?v=2"></script>
 
-
-    <script src="js/circle-progress.js"></script>
+<!--     <script src="js/circle-progress.js"></script> -->
 </head>
 
 
@@ -45,20 +42,20 @@
 
 
 
-<div class="cardTable" id="cardTable" ng-controller="tableController" ng-init="events()">
+<div class="cardTable" id="cardTable" ng-controller="tableController" >
  <div class="init" ng-hide="alreadyPlaying">
         <div class="dialog-overlay"></div>
         <div class="dialog-box">
             <div class="dialog-content">
                 <div>Don't go nuts!<br/><span class="subtitle">wanna play?</span></div>
 
-                <div class="startSelect" ng-hide="thisIsMaster"><a ng-click="initGame()" class="button big {{gameCreated?'gray':'blue'}}">Start new game<span>Should only used by ONE player</span></a><a ng-click="joinGame()" class="button big {{gameCreated?'blue':'gray'}}">Join game<span>play with others</span></a><a ng-click="watchGame()" class="button big {{gameCreated?'blue':'gray'}}">Watch the game<span>Just watch others play</span></a></div>
-                <div class="masterWait" ng-show="thisIsMaster">
-                    <div><strong>Waiting for players:</strong><br/>Users total: <b> {{playerCounts().total}}</b>, Players: <b>{{playerCounts().waiting}}</b>, Voyeurs: <b>{{playerCounts().watching}}</b>, Addin not loaded: <b>{{playerCounts().noaddon}}</b></div>
-                    <a ng-click="startNewGame()" class="button big {{playerCounts().waiting>1?'blue':'gray'}}">Start the game<span>Can't wait any longer</span></a></div>
+                <div class="startSelect" ng-show="showStartSelection()"><a ng-click="initGame()" class="button big {{servant.status.serverStarted?'gray':'blue'}}">Start new game<span>Should only used by ONE player</span></a><a ng-click="joinGame()" class="button big {{servant.status.serverStarted && !servant.status.isRunning?'blue':'gray'}}">Join game<span>play with others</span></a><a ng-click="watchGame()" class="button big {{servant.status.serverStarted?'blue':'gray'}}">Watch the game<span>Just watch others play</span></a></div>
+                <div class="masterWait" ng-show="showWait()">
+                    <div><strong>Waiting for players:</strong><br/>Users total: <b> {{servant.playerStats().total}}</b>, Players: <b>{{servant.playerStats().waiting}}</b>, Voyeurs: <b>{{servant.playerStats().watching}}</b>, Addin not loaded: <b>{{servant.playerStats().noAddon}}</b></div>
+                    <a ng-show="master" ng-click="startNewGame()" class="button big {{servant.playerStats().waiting>1?'blue':'gray'}}">Start the game<span>Can't wait any longer</span></a></div>
             </div></div>
-
     </div>
+    <div ng-show="servant.status.isRunning">
     <div class="left">
         <div class="players">
             <span class="subTitle">Players:</span>
@@ -124,6 +121,7 @@
             <div ng-hide="{{currentGame.currentPlayer().id===id}}" class="disableCards">&nbsp;</div>
         </div>
     </div>
+</div>
 </div>
 </body>
 ]]>

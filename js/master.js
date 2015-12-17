@@ -4,15 +4,19 @@ var master = function () {
     this.allCards=[];
     this.playedCards=[];
     this.log=[];
+    this.readChanges=[];
 
     //GameStatus:
     this.status={
+        masterId:null,
         waitForNope:false,      // Darauf warten, dass jemand "Nope" spielt
         someOneNoped:false,     // Jemand hat "Nope" gespielt?
         secondPlayer:false,     // Zweiter Spieler für Aktion
         reverse:false,          // Umgekehrte Reihenfolge?
         isRunning:false,        // Spiel läuft?
-        isWaiting:false         // Warten auf Spieler?
+        isWaiting:false,        // Warten auf Spieler?
+        serverStarted:true,
+        deckCount:0             // verbleibende Karten im Deck
     };
 
     this.settings={
@@ -25,29 +29,65 @@ var master = function () {
 
 master.prototype = {
     constructor: master,
-    toClients:function(key,value) {
-        // Einzelnes Event an alle Clients
-        if (value===undefined) {
-            value='';
+    readState:function(state) {
+        var obj=this;
+        var clientChanges=false;
+        obj.players.forEach(function(player) {
+            if (state[player.id]!==undefined) {
+                JSON.parse(state[player.id]).forEach(function (clientMessage) {
+                    var alreadyProcessed= $.inArray(clientMessage.id, obj.readChanges)>=0;
+                    if (!alreadyProcessed) {
+                        clientChanges=true;
+                        switch (clientMessage.key) {
+                            case "join":
+                                if (state.isRunning) {
+                                    // Zu spät, ändern in watch
+                                    player.state="watching";
+                                } else {
+                                    player.state="waiting";
+                                }
+                                break;
+                            case "watch":
+                                player.state="watching";
+                                break;
+                        }
+                        obj.readChanges.push(clientMessage.id);
+                    }
+                });
+            }
+        });
+
+        if (clientChanges) {
+            obj.toClients();
         }
-        gapi.hangout.data.submitDelta({'isClientMessage':'1', 'isServerMessage':'0', 'actionType':key, 'value': value});
+    },
+
+    toClients:function() {
+        var obj=this;
+        gapi.hangout.data.submitDelta(
+            {
+                'players':JSON.stringify(obj.players),
+                'log':JSON.stringify(obj.getLog(10)),
+                'playedCards':JSON.stringify(obj.lastPlayedCards(5)),
+                'status':JSON.stringify(obj.status)
+            });
     },
     toSingleClient:function(playerId,key, value ) {
         if (value===undefined) {
             value='';
         }
-        // Einzelnes Event an bestimmten Spieler
-        gapi.hangout.data.submitDelta({'isClientMessage':'1', 'isServerMessage':'0', 'actionType':key, 'value': value, 'player':playerId});
+        // TODO: Einzelnen Spieler finden und Befehl senden
     },
 
-    createGame:function() {
+    createGame:function(masterId) {
         // Spiel erzeugen
         this.log=[];
         this.log.unshift("game initializing");
-        masterscope = angular.element($('#cardTable')).scope();
-        this.toClients("gameInit");  // Informieren, dass jemand ein Spiel gestartet hat.
+        this.masterId=masterId;
+        this.toClients();  // Informieren, dass jemand ein Spiel initialisiert hat.
         this.readAllCards(this.initData);
     },
+
 
 
     playerJoining:function(playerId) {
@@ -83,7 +123,7 @@ master.prototype = {
                 // Spielleiter
                 player.state="waiting";
             } else if (participant.hasAppEnabled) {
-                player.state="watching";
+                player.state="unknown";
             } else {
                 player.state="no app";
             }
@@ -95,7 +135,7 @@ master.prototype = {
 
         obj.log.unshift("Waiting for players...");
         obj.status.isWaiting=true;
-        obj.toClients("gameWaiting");  // Informieren, dass jemand ein Spiel gestartet hat.
+        obj.toClients();  // Informieren, dass jemand ein Spiel gestartet hat.
     },
     
     startGame:function() {
@@ -186,7 +226,7 @@ master.prototype = {
         }
         this.log.unshift("cards shuffled");
     },
-    addCardsToDeckdra:function(card, number) {
+    addCardsToDeck:function(card, number) {
         // Karten zum Deck hinzufügen
         for (i=0; i<number; i++) {
             var newCard={};
@@ -494,8 +534,9 @@ master.prototype = {
         obj.shuffle(obj.deck);
 
         this.status.isRunning=true;
-        this.toClients("gameStarted","1");  // Informieren, dass das Spiel gestartet wurde.
         this.log.unshift("ready to play");
+        this.toClients();  // Informieren, dass das Spiel gestartet wurde.
+
     }
 };
 

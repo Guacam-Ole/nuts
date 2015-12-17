@@ -1,11 +1,33 @@
 var apiReady=false;
-var gameReady=false;
+var documentReady=false;
+$( document ).ready(function() {
+    documentReady=true;
+    initGame();
+});
+
 gapi.hangout.onApiReady.add(function(eventObj){
     if (eventObj.isApiReady) {
         apiReady=true;
+        initGame();
+
     }
 });
 
+function initGame() {
+       if (apiReady && documentReady) {
+           var scope=angular.element($('#cardTable')).scope();
+           if (scope!==undefined) {
+               if (scope.servant !== undefined) {
+                   scope.servant.id=gapi.hangout.getLocalParticipantId();
+                   if (scope.servant.readState(gapi.hangout.data.getState())) {
+                       scope.$apply(function () {
+                           scope.wait();
+                       });
+                   }
+               }
+           }
+       }
+};
 
 gapi.hangout.data.onStateChanged.add(function (event ) {
     if (!apiReady) {
@@ -13,6 +35,20 @@ gapi.hangout.data.onStateChanged.add(function (event ) {
     }
     console.log(event.state);
     var scope=angular.element($('#cardTable')).scope();
+    if (scope.servant!==undefined) {
+        if (scope.servant.readState(event.state)) {
+            scope.$apply(function() {
+                scope.wait();
+            });
+        }
+    }
+
+    if (scope.master!==undefined) {
+        scope.master.readState(event.state);
+    }
+
+
+    // ALT: KANN WEG
 
     if (event.state['isClientMessage']==='1') {
         switch (event.state["actionType"]) {
@@ -25,9 +61,7 @@ gapi.hangout.data.onStateChanged.add(function (event ) {
                 break;
         }
 
-        scope.$apply(function() {
-            scope.wait();
-        });
+
     } else if (event.state['isServerMessage']==='1') {
         if (scope.master!==undefined) {
             switch (event.state["actionType"]) {

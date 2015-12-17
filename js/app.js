@@ -1,18 +1,17 @@
 angular.module('boomApp', [])
     .controller('tableController', function($scope) {
         $scope.isTraining=false; // Training= Man spielt alle Spieler selbst
-        $scope.id=gapi.hangout.getLocalParticipantId();
+        $scope.showStart=true;
         $scope.selectedCards=[];
-        $scope.showFuture=false;
-        $scope.gameRunning=false;
-        $scope.thisIsMaster=false;
-        $scope.alreadyPlaying=false;
-        $scope.waitingForPlayerSelection=undefined;
+        $scope.servant=new game();
+
+//        $scope.servant.readState(gapi.hangout.data.getState().state);
+
+
 
         $scope.initGame=function() {
             $scope.master=new master();
-            $scope.master.createGame();
-            $scope.thisIsMaster=true;
+            $scope.master.createGame(gapi.hangout.getLocalParticipantId());
         };
 
         $scope.playerCounts=function() {
@@ -29,6 +28,28 @@ angular.module('boomApp', [])
             }
         };
 
+        $scope.showStartSelection=function() {
+            return $scope.servant.me()===undefined || ($scope.servant.me().state!=="waiting" && $scope.servant.me().state!=="watching");
+        };
+
+        $scope.showWait=function() {
+            return $scope.servant.status.isWaiting;
+        };
+
+        $scope.joinGame=function() {
+            $scope.servant.joinGame();
+        };
+
+        $scope.watchGame=function() {
+            $scope.servant.watchGame();
+        };
+
+        $scope.startNewGame=function() {
+            $scope.master.startGame();
+        };
+
+
+
         $scope.setAsCurrentPlayer=function(player) {
             if ($scope.waitingForPlayerSelection!==undefined && $scope.playerSelectable(player)) {
               //  $scope.currentGame.playCard($scope.selectedCards,player);
@@ -41,6 +62,8 @@ angular.module('boomApp', [])
                 }
             }
         };
+
+
         $scope.wait=function() {
 
         };
@@ -221,65 +244,6 @@ angular.module('boomApp', [])
                 return $scope.currentGame.currentPlayer().id===$scope.id && !$scope.currentGame.playerHasToPlayDisposal && $scope.selectedCards[0].type==="thief";
             }
         };
-        $scope.startNewGame=function() {
-            var playerIds=[];
-            var playerNames=[];
-            var playerStates=[];
-            var players= gapi.hangout.getParticipants();
-
-            players.forEach(function (player) {
-                playerIds.push(player.id);
-                playerNames.push(player.person.displayName);
-                if (player.person) {
-                    playerStates.push("starting");
-                } else {
-                    playerStates.push("watching");
-                }
-            });
-
-            $scope.currentGame.init(players.length);
-            $scope.currentGame.initPlayers(playerIds,playerNames,playerStates);
-        };
-        $scope.events=function() {
-
-        };
-
-        $scope.startGame=function() {
-            // Test-Variante (offline)
-            $scope.currentGame.init($scope.players.length);
-            var playerIds=[];
-            var playerNames=[];
-            $scope.players.forEach(function (player) {
-                playerIds.push(player.id);
-                playerNames.push(player.name);
-            });
-            $scope.currentGame.initPlayers(playerIds,playerNames);
-            $scope.alreadyPlaying=true;
-        };
-
-        $scope.watchGame=function() {
-            $scope.currentGame.watchGame($scope.id);
-            $scope.alreadyPlaying=true;
-        };
-        $scope.toServer=function(key,value) {
-            if (value===undefined) {
-                value='';
-            }
-            gapi.hangout.data.submitDelta({'isServerMessage':'1', 'isClientMessage':'0', 'actionType':key, 'value': value, 'player':$scope.id});
-        };
-
-        $scope.joinGame= function () {
-            $scope.toServer("joinGame", gapi.hangout.getLocalParticipantId());
-        };
-
-        $scope.watchGame= function () {
-            $scope.toServer("watchGame", gapi.hangout.getLocalParticipantId());
-        };
-
-
-
-
-
     });
 
 

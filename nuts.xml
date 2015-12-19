@@ -29,9 +29,9 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
     <script src="//plus.google.com/hangouts/_/api/v1/hangout.js"></script>
-    <script src="js/master.js?v=5"></script>
-    <script src="js/servant.js?v=6"></script>
-    <script src="js/app.js?v=7"></script>
+    <script src="js/master.js?v=12"></script>
+    <script src="js/servant.js?v=8"></script>
+    <script src="js/app.js?v=12"></script>
     <script src="js/events.js?v=2"></script>
 
 <!--     <script src="js/circle-progress.js"></script> -->
@@ -54,6 +54,14 @@
                     <div><strong>Waiting for players:</strong><br/>Users total: <b> {{servant.playerStats().total}}</b>, Players: <b>{{servant.playerStats().waiting}}</b>, Voyeurs: <b>{{servant.playerStats().watching}}</b>, Addin not loaded: <b>{{servant.playerStats().noAddon}}</b></div>
                     <a ng-show="master" ng-click="startNewGame()" class="button big {{servant.playerStats().waiting>1?'blue':'gray'}}">Start the game<span>Can't wait any longer</span></a></div>
             </div></div>
+    </div>
+    <div ng-show="deckNumbers" class="putNut dialog-box">
+        <div class="dialog-content">
+        <div>Put the nut back into the deck. <strong>Where do you want to hide it?</strong></div>
+        <select ng-change="deckSelect()" ng-model="deckSelector">
+            <option ng-repeat="deckpos in deckNumbers" value="{{deckpos.key}}">{{deckpos.value}}</option>
+        </select>
+        </div>
     </div>
     <div ng-show="alreadyPlaying()">
     <div class="left">
@@ -79,6 +87,7 @@
         <div class="top">
             <div class="deck">
                 <img class="{{canEndRound()?'selectable':''}}" ng-click="endRound()" src="./img/cardback.png">
+                <img class="lastDrawnCard" ng-click="endDraw()" src="./img/{{servant.status.lastDrawnCard.image}}" ng-show="servant.status.lastDrawnCard || 1==1">
                 <div class="deckText"><span>{{servant.status.deckCount}}</span><br/>cards</div>
             </div>
             <div class="lastPlayedCards">
@@ -90,21 +99,21 @@
         <div class="debug"><b>Debug:</b>
             <pre>
                 Canplay:{{canPlay()}}
-                WaitforNo:{{servant.waitForNope}}
-                SomeoneNoped:{{servant.someOneNoped}}
+                WaitforNo:{{servant.status.waitForNope}}
+                SomeoneNoped:{{servant.status.someOneNoped}}
                 Player:{{servant.currentPlayer().name}}
                 SecondPlayer:{{servant.secondPlayer.name}}
-                playerHasToPlayDisposal:{{servant.playerHasToPlayDisposal}}
+                playerHasToPlayDisposal:{{servant.status.playerHasToPlayDisposal}}
                 myTurn:{{myTurn()}}
         </pre>
         </div>
 
         <div class="previewCards" ng-show="servant.showFuture">
-            <div>Die nächsten 3 Karten:</div>
+            <div>Next cards:</div>
             <div ng-repeat="card in servant.future track by $index" class="singleCard" >
                 <img src="./img/{{card.image}}" >
             </div>
-            <div><a style="cursor:pointer" ng-click="showFuture=false;">Schließen</a> </div>
+            <div><a style="cursor:pointer" ng-click="showFuture=false;">Close</a> </div>
         </div>
         <div class="yours" ng-Disabled="!myTurn()">
             <div class="playCards"><a class="button {{canPlay()?'blue':'gray'}}" ng-click="playCard()">Play card(s)</a><div ng-show="showSelect()" class="selectPlayer">Please select a player</div></div>

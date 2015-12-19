@@ -6,10 +6,13 @@ var master = function () {
     this.log=[];
     this.readChanges=[];
 
+    this.finalTimeout=undefined;
+
     //GameStatus:
     this.status={
         masterId:null,
         playerHasToPlayDisposal:false,
+
         waitForNope:false,      // Darauf warten, dass jemand "Nope" spielt
         someOneNoped:false,     // Jemand hat "Nope" gespielt?
         secondPlayerId:undefined,     // Zweiter Spieler für Aktion
@@ -21,7 +24,7 @@ var master = function () {
     };
 
     this.settings={
-        nopetime:10 // Sekunden, die man Zeit hat, um "NOPE" auszuspielen    
+        nopetime:5 // Sekunden, die man Zeit hat, um "NOPE" auszuspielen
     }
 
     
@@ -51,6 +54,18 @@ master.prototype = {
                             case "watch":
                                 player.state="watching";
                                 break;
+                            case "draw":
+                                obj.drawCard(obj.currentPlayer());
+                                break;
+                            case "endDraw":
+                                obj.drawCardFinally(obj.currentPlayer(),clientMessage.value);
+                                break;
+                            case "playCard":
+                                obj.playCard(clientMessage.playerId, clientMessage.cardId,clientMessage.secondId);
+                                break;
+                            case "playNope":
+                                obj.playNope(clientMessage.playerId,clientMessage.cardId);
+                                break;
                         }
                         obj.readChanges.push(clientMessage.id);
                     }
@@ -65,11 +80,12 @@ master.prototype = {
 
     toClients:function() {
         var obj=this;
+        obj.status.deckCount=obj.deck.length;
         gapi.hangout.data.submitDelta(
             {
                 'players':JSON.stringify(obj.players),
                 'log':JSON.stringify(obj.getLog(10)),
-                'playedCards':JSON.stringify(obj.lastPlayedCards(5)),
+                'playedCards':JSON.stringify(obj.lastPlayedCards(3)),
                 'status':JSON.stringify(obj.status)
             });
     },
@@ -101,13 +117,11 @@ master.prototype = {
             // Kann los gehen!
             player.state="waiting";
         }
-        this.wait();
     },
     playerWatching:function(playerId) {
         var player = $.grep(this.players, function(e){ return e.id == playerId; })[0];
         player.wantsToPlay=false;
         player.state="watching";
-        this.wait();
     },
 
 
@@ -176,6 +190,7 @@ master.prototype = {
                     break;
                 default:
                     noAddonCount++;
+                    break;
             }
 
         });
@@ -198,7 +213,7 @@ master.prototype = {
             return this.playedCards;
         }
         var playedCards=[];
-        for (i=0; i<=count; i++) {
+        for (var i=0; i<=count; i++) {
             playedCards.push(this.playedCards[i]);
         }
         return playedCards;
@@ -230,7 +245,7 @@ master.prototype = {
     },
     addCardsToDeck:function(card, number) {
         // Karten zum Deck hinzufügen
-        for (i=0; i<number; i++) {
+        for (var i=0; i<number; i++) {
             var newCard={};
             angular.copy(card,newCard);
             if (newCard.id===undefined) {
@@ -244,39 +259,59 @@ master.prototype = {
         // SO: http://stackoverflow.com/questions/6248666/how-to-generate-short-uid-like-ax4j9z-in-js
         return ("0000" + (Math.random()*Math.pow(36,4) << 0).toString(36)).slice(-4)
     },
-    drawCard:function(player,dontLog) {
-        // Karte aus Deck ziehen. Return: Runde beendet?
-
+    drawCard:function(player, dontLog) {
+        // Karte aus Deck ziehen
         if (player.name!==undefined && !dontLog) {
             this.log.unshift(player.name + " took one card");
         }
         var card=this.deck.shift();
+        this.status.lastDrawnCard=card;
         if (card.type==="nut")  {
-            // Sofort Spielen
+            // Nuss.
             this.log.unshift(player.name + " is about to go nuts!");
-            this.playedCards.unshift(card);
+
             // Schauen, ob der Spieler einen Nussknacker hat:
             var disposal = $.grep(player.cards, function(e){ return e.type == "disposal"; });
             if (disposal.length>0) {
                 this.status.playerHasToPlayDisposal=true;
-                return false;
-            }
-            else {
+                obj.toClients();
+            } else {
                 // Raus!
                 player.state="nuts";
                 this.log.unshift(player.name + " has gone nuts!");
-                return true;
+                this.playedCards.unshift(card);
+                obj.nextPlayer();
             }
-        } else {
-            player.cards.push(card);
-            return true;
+        }
+        if (dontLog) {
+            this.drawCardFinally(player,-1,dontLog);
         }
     },
-    wait:function() {
-        masterscope.$apply(function() {
-            masterscope.wait();
-        });
+    drawCardFinally:function(player, nutPosition, dontLog) {
+        // Karte angeschaut und genommen
+        // NutPosition= Position, an der die Nuss eingefügt wird (wenn Knacker gespielt)
+        var card=this.status.lastDrawnCard;
+        this.playedCards.unshift(card);
+        player.cards.push(card);
+        this.status.lastDrawnCard=undefined;
+        if (nutPosition>=0) {
+            var disposal = $.grep(player.cards, function(e){ return e.type == "disposal"; });
+            this.log.unshift(player.name + " did NOT go nuts!");
+            this.playedCards.unshift(disposal);
+            for(var i = player.cards.length - 1; i >= 0; i--) {
+                if(player.cards[i].id===disposal.id) {
+                    player.cards.splice(i, 1);
+                }
+            }
+
+            this.deck.splice(nutPosition, 0, disposal);
+        }
+        if (!dontLog) {
+            this.nextPlayer();
+            this.toClients();
+        }
     },
+
     showFuture:function() {
 
     },
@@ -286,24 +321,32 @@ master.prototype = {
         }
         var secondplayer= $.grep(this.players, function(e){ return e.id == this.status.secondPlayerId; })[0];
     },
-    playCard:function(cards, secondPlayerId) {
+    playCard:function(playerId, cardId, secondPlayerId) {
         var obj=this;
         obj.status.waitForNope=false;
         obj.status.secondPlayerId=secondPlayerId;
-        obj.playerHasToPlayDisposal=false;
+        obj.status.playerHasToPlayDisposal=false;
+        var playedCards=[];
+        var player=$.grep(obj.players, function(e){ return e.id == playerId; })[0];
+        var card= $.grep(player.cards, function(e){ return e.id == cardId; })[0];
+        playedCards.push(card);
+        if (card.type==="thief") {
+            // Zweite Karte suchen
+            var secondcard= $.grep(player.cards, function(e){ return e.id !== cardId && e.image===card.image; })[0];
+            playedCards.push(secondcard);
+        }
 
-        var player=this.currentPlayer();
         var retValue=null;
         this.log.unshift(player.name+" played a card");
-        cards.forEach(function(card) {
-            obj.playedCards.unshift(card);
-            for(i = player.cards.length - 1; i >= 0; i--) {
-                if(player.cards[i].id===card.id) {
+        playedCards.forEach(function(singleCard){
+            obj.playedCards.unshift(singleCard);
+            for(var i = player.cards.length - 1; i >= 0; i--) {
+                if(player.cards[i].id===singleCard.id) {
                     player.cards.splice(i, 1);
                 }
             }
         });
-        switch (cards[0].type) {
+        switch (card.type) {
             case "thief":
             case "force":
             case "sleep":
@@ -311,59 +354,59 @@ master.prototype = {
             case "shuffle":
             case "future":
             case "reverse":
-                obj.waitForNope=true;
+                obj.status.waitForNope=true;
                 break;
         }
-        var secondPlayer=obj.getSecondPlayer();
-        if (secondPlayer!==undefined) {
+        if (secondPlayerId!=='none') {
+            var secondPlayer= $.grep(obj.players, function(e){ return e.id == secondPlayerId; })[0];
             this.log.unshift(player.name+" chose "+secondPlayer.name+" as the victim");
         }
 
-        if (obj.waitForNope) {
-            obj.setTimeout(cards[0]);
+        if (obj.status.waitForNope) {
+            obj.setTimeout(card,secondPlayer);
         } else {
-            obj.playCardFinally(cards[0],false);
+            obj.playCardFinally(card,secondPlayer);
         }
     },
-    setTimeout:function(card) {
+    setTimeout:function(card, secondPlayer) {
         var obj=this;
         if (obj.finalTimeout!==undefined) {
             clearTimeout(obj.finalTimeout);
         }
         // Kann abgebrochen werden. Abwarten, ob jemand "Nope" spielt
         obj.finalTimeout=setTimeout(function(){
-            obj.playCardFinally(card, true);
-        }, 1000*obj.nopetime);
+            obj.playCardFinally(card,  secondPlayer);
+        }, 1000*obj.settings.nopetime);
+        obj.toClients();
     },
-    playNope:function(playerId, card) {
+    playNope:function(playerId, cardId) {
 
-        if (!this.waitForNope) {
+        if (!this.status.waitForNope) {
             return;
         }
         var player= $.grep(this.players, function(e){ return e.id == playerId; })[0];
+        var card= $.grep(player.cards, function(e){ return e.id == cardId; })[0];
         this.log.unshift(player.name+" played 'No'");
         this.someOneNoped=!this.someOneNoped;
         this.playedCards.unshift(card);
-        for(i = player.cards.length - 1; i >= 0; i--) {
+        for(var i = player.cards.length - 1; i >= 0; i--) {
             if(player.cards[i].id===card.id) {
                 player.cards.splice(i, 1);
             }
         }
+        this.toClients();
     },
-    playCardFinally:function(card) {
-        this.waitForNope=false;
+    playCardFinally:function(card,secondPlayer) {
+        this.status.waitForNope=false;
         if (this.someOneNoped && card.type!="force") {
             this.someOneNoped=false;
-            this.wait();
             return; // nix tun
         }
         if (card.type==="gift" && this.status.offeredGift===undefined) {
             this.status.waitForGift=true;
             this.setTimeout(card); // Solange warten, bis Spieler Karte ausgewählt hat.
-            this.wait();
             return;
         }
-        var secondPlayer=this.getSecondPlayer();
         switch (card.type) {
             case "disposal":
                 // Nuss entschärft
@@ -378,11 +421,11 @@ master.prototype = {
                 var newcard = secondPlayer.cards[cardId];
                 secondPlayer.cards.splice(cardId, 1);
                 this.currentPlayer().cards.push(newcard);
-                this.wait();    // Status aktualisieren
+                this.state.secondPlayerId=undefined;
                 break;
             case "force":
                 // Nächster Spieler muss zwei Runden spielen
-                this.log.unshift(this.currentPlayer().name+" forces "+secondPlayer.name+" to play two rounds");
+                this.log.unshift(this.currentPlayer().name+" forces the next player to play two rounds");
                 if (this.someOneNoped) {
                     this.numRounds=1;
                 } else {
@@ -402,13 +445,12 @@ master.prototype = {
                 secondPlayer.cards.splice(this.status.offeredGift, 1);
                 this.currentPlayer().cards.push(newcard);
                 this.status.offeredGift=undefined;
-                this.wait();    // Status aktualisieren
+                this.state.secondPlayerId=undefined;
                 break;
             case "shuffle":
                 // Mischen des Stapels
                 this.log.unshift(this.currentPlayer().name+" shuffles the cards");
                 this.shuffle(this.deck);
-                this.wait();    // Status aktualisieren
                 break;
             case "future":
                 // In die Zukunft schauen
@@ -417,11 +459,11 @@ master.prototype = {
                 break;
             case "reverse":
                 this.reverse=!this.reverse;
-                this.wait();
                 break;
         }
         this.status.someOneNoped=false;
         this.status.waitForGift=false;
+        this.toClients();
     },
     
     getNextPlayer:function(currentPlayerIndex) {
@@ -464,6 +506,8 @@ master.prototype = {
 
         var nextPlayerIndex=this.getNextPlayer(currentPlayerIndex);
         obj.players[nextPlayerIndex].state="playing";
+        obj.status.lastDrawnCard=undefined;
+
         obj.toClients();
     },
 
@@ -474,7 +518,7 @@ master.prototype = {
             return this.log;
         } else {
             log=[];
-            for (i=0;i<count;i++) {
+            for (var i=0;i<count;i++) {
                 log.push(this.log[i]);
             }
             log.push("...");
@@ -490,6 +534,7 @@ master.prototype = {
         var numberOfDecks=Math.ceil(numPlayers/5);    // Pro 5 Spieler ein Kartendeck
         var disposalrest=6*numberOfDecks-numPlayers;
         var obj=this;
+        obj.playedCards=[];
 
         // Kartentypen:
         var nut = $.grep(obj.allCards, function(e){ return e.type == "nut"; })[0];
@@ -520,12 +565,12 @@ master.prototype = {
 
         var playerIndex=0;
         // Karten für Spieler:
-        for (i=0;i<numPlayers; i++) {
+        for (var i=0;i<numPlayers; i++) {
             playerIndex=obj.getNextPlayer(playerIndex);
             var player=obj.players[playerIndex];
             player.cards=[];
             player.cards.push(disposal);
-            for (cards=0; cards<4; cards++) {
+            for (var cards=0; cards<4; cards++) {
                 obj.drawCard(player, true);
             }
             //obj.players.push(player);
@@ -541,9 +586,11 @@ master.prototype = {
 
         obj.shuffle(obj.deck);
 
-        this.status.isRunning=true;
-        this.log.unshift("ready to play");
-        this.toClients();  // Informieren, dass das Spiel gestartet wurde.
+        obj.status.isRunning=true;
+        obj.log.unshift("ready to play");
+        obj.status.lastDrawnCard=obj.deck[0];
+        obj.toClients();  // Informieren, dass das Spiel gestartet wurde.
+
 
     }
 };

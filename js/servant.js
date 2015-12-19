@@ -186,12 +186,36 @@ game.prototype = {
         return ("0000" + (Math.random()*Math.pow(36,4) << 0).toString(36)).slice(-4);
     },
 
+    addCardState:function(playerId, cardId, secondPlayerId) {
+        this.newMessages.push(
+            {
+                key:"playCard",
+                id:this.getUid(),
+                cardId:cardId,
+                playerId:playerId,
+                secondId:secondPlayerId
+            });
+    },
 
-    playCard:function(card, secondPlayer) {
+    playCard:function(card, secondPlayerId) {
+
+        if (secondPlayerId===undefined) {
+            secondPlayerId='none';
+        }
+        this.addCardState(this.id,card.id,secondPlayerId);
+        this.writeState();
     },
     playNope:function(playerId, card) {
+        this.addCardState(playerId,card.id,0);
+        this.writeState();
     },
 
+    drawCard:function() {
+        this.addState("draw","");
+    },
+    endDraw:function(nutPosition) {
+        this.addState("endDraw",nutPosition);
+    },
 
     currentPlayer:function() {
         return $.grep(this.players, function(e){ return e.state == "playing"; })[0];

@@ -13,6 +13,29 @@ angular.module('boomApp', [])
             $scope.master=new master();
             $scope.master.createGame(gapi.hangout.getLocalParticipantId());
         };
+        $scope.selectDeckPos=function() {
+            $scope.deckNumbers=[];
+            $scope.deckSelector=-1;
+            $scope.deckNumbers.push({
+                key:0,
+                value:'to the top'
+            });
+            for (i=1; i<$scope.servant.status.deckCount; i++) {
+               $scope.deckNumbers.push({
+                   key:i,
+                   value:i+1
+               }) ;
+            }
+            $scope.deckNumbers.push({
+                key:$scope.servant.status.deckCount,
+                value:'at the end'
+            });
+        };
+
+        $scope.deckSelect=function() {
+          $scope.deckNumbers=undefined;
+            $scope.servant.endDraw($scope.deckSelector);
+        };
 
         $scope.playerCounts=function() {
             if ($scope.master===undefined) {
@@ -64,7 +87,7 @@ angular.module('boomApp', [])
                 return false;
             }
             if ($scope.servant.currentPlayer().id===$scope.servant.id) {
-                return $scope.servant.status.secondPlayerId===undefined && !$scope.servant.status.waitForNope;
+                return ($scope.servant.status.secondPlayerId===undefined || $scope.servant.status.secondPlayerId==='none') && !$scope.servant.status.waitForNope;
             } else {
                 if ($scope.servant.status.secondPlayerId===$scope.servant.id) {
                     if ($scope.status.waitForGift && $scope.status.offeredGift==undefined) {
@@ -103,7 +126,7 @@ angular.module('boomApp', [])
                     mood: 'idle wait',
                     message: 'waiting for game to start'
                 };
-            } else if ($scope.servant.players===undefined  || $scope.servant.players.length===0) {
+            } else if ($scope.servant.players===undefined  || $scope.servant.players.length===0 || $scope.servant.currentPlayer()===undefined) {
                 return {
                     mood: 'idle wait',
                     message: 'waiting for players'
@@ -140,6 +163,7 @@ angular.module('boomApp', [])
             }
         };
         $scope.canEndRound=function() {
+
             if ($scope.servant===undefined) {
                 return false;
             }
@@ -200,17 +224,15 @@ angular.module('boomApp', [])
             if ($scope.servant.currentPlayer().id===$scope.servant.id) {
                 switch ($scope.selectedCards[0].type) {
                     case "thief":
-                    case "force":
                     case "gift":
                         $scope.waitingForPlayerSelection = "getCard";
                         break;
                     default:
                         $scope.waitingForPlayerSelection = undefined;
-                        $scope.servant.playCard($scope.selectedCards);
+                        $scope.servant.playCard($scope.selectedCards[0]);
                         $scope.selectedCards=[];
                         break;
                 }
-
             } else {
                 // Reaktionskarte
                 if ($scope.servant.status.waitForGift) {
@@ -219,7 +241,9 @@ angular.module('boomApp', [])
                 } else if ($scope.servant.status.waitForNope) {
                     $scope.servant.playNope($scope.servant.id, $scope.selectedCards[0])
                 } else  {
-                    $scope.servant.playCard($scope.selectedCards);  // Nussknacker
+                    // Nussknacker
+                    $scope.selectDeckPos();
+                    // $scope.servant.playCard($scope.selectedCards[0]);  // Nussknacker
                 }
                 $scope.selectedCards=[];
             }
@@ -229,6 +253,12 @@ angular.module('boomApp', [])
                 if ($scope.servant.drawCard()) {
                     $scope.servant.nextPlayer();
                 }
+            }
+        };
+        $scope.endDraw=function() {
+            if ($scope.servant.status.lastDrawnCard!==undefined && $scope.servant.status.lastDrawnCard.type!=='nut') {
+                $scope.servant.endDraw(-1);
+                $scope.servant.status.lastDrawnCard=undefined;
             }
         };
         $scope.cardSelectable=function(card) {
@@ -259,9 +289,17 @@ angular.module('boomApp', [])
         };
 
 
+        $scope.setAsCurrentPlayer=function(player) {
+            if ($scope.waitingForPlayerSelection!==undefined && $scope.playerSelectable(player)) {
+                $scope.servant.playCard($scope.selectedCards[0],player.id);
+                $scope.selectedCards=[];
+                $scope.waitingForPlayerSelection=undefined;
+            }
+        };
         $scope.showSelect=function() {
             return $scope.waitingForPlayerSelection!==undefined;
         };
+
         $scope.canPlay=function()  {
             var cardsAllValid=true;
             $scope.selectedCards.forEach(function(card) {

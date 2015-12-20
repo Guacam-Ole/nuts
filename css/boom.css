@@ -398,6 +398,7 @@ span.subtitle {
 
 .playCards {
     margin: -10px;
+    margin-top: -24px;
 }
 
 
@@ -432,11 +433,14 @@ img.lastDrawnCard {
 }
 
 .cardName {
-    position: absolute;
-    top: 0px;
+    position: relative;
+    top: -147px;
     left: 12px;
     font-size: 10px;
     text-align: center;
     width: 75px;
-    /* background: green; */
+
+}
+.deck .cardName {
+    z-index: 9000;
 }

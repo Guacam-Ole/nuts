@@ -87,7 +87,7 @@ angular.module('boomApp', [])
                 return false;
             }
             if ($scope.servant.currentPlayer().id===$scope.servant.id) {
-                if (($scope.servant.status.secondPlayerId===undefined || $scope.servant.status.secondPlayerId==='none') && !$scope.servant.status.waitForNope) {
+                if (($scope.servant.status.secondPlayerId===undefined || $scope.servant.status.secondPlayerId==='none') && $scope.servant.status.waitForNope===$scope.servant.status.someOneNoped ) {
                     if ($scope.showLastDrawnCard()) {
                         // Karte bereits gezogen
                         return $scope.servant.status.lastDrawnCard.type==="nut"; // Nussknacker muss gespielt werden
@@ -97,7 +97,7 @@ angular.module('boomApp', [])
                 }
             } else {
                 if ($scope.servant.status.secondPlayerId===$scope.servant.id) {
-                    if ($scope.status.waitForGift && $scope.status.offeredGift==undefined) {
+                    if ($scope.servant.status.waitForGift && $scope.servant.status.offeredGift==undefined) {
                         return true;
                     }
                 } else if ($scope.servant.status.waitForNope) {
@@ -115,6 +115,18 @@ angular.module('boomApp', [])
 
         $scope.wait=function() {
 
+        };
+
+        $scope.winner=function() {
+            if (!$scope.myTurn()) {
+                return false;
+            }
+            var stats=$scope.servant.playerStats();
+            return stats.waiting===0;
+        };
+
+        $scope.nextRound=function() {
+          $scope.servant.newRound();
         };
 
         $scope.showTheFuture=function() {
@@ -142,10 +154,24 @@ angular.module('boomApp', [])
                     message: 'waiting for players'
                 };
             } else if ($scope.servant.currentPlayer().id===$scope.servant.id ) {
+                if ($scope.showSelect()) {
+                    return {
+                        mood: 'warning play',
+                        message: 'Please select a player'
+                    };
+                }
+
+                if ($scope.servant.status.waitForNope) {
+                    return {
+                        mood: 'idle play',
+                        message: 'Wait for others to play "no"'
+                    };
+                }
+
                 if ($scope.showLastDrawnCard()) {
                     if ($scope.servant.status.lastDrawnCard.type==="nut") {
                         return {
-                            mood: 'warning play',
+                            mood: 'error play',
                             message: 'Please play the nutcracker!'
                         };
                     } else {
@@ -155,6 +181,12 @@ angular.module('boomApp', [])
                         };
                     }
                 } else {
+                    if ($scope.servant.status.secondPlayerId!==undefined && $scope.servant.status.secondPlayerId!=='none') {
+                        return {
+                            mood: 'idle wait',
+                            message: 'Waiting for other players '
+                        };
+                    }
                     return {
                         mood: 'success play',
                         message: 'Please play a card or draw a card to end your turn '
@@ -163,7 +195,7 @@ angular.module('boomApp', [])
 
             } else if ($scope.servant.status.waitForGift && $scope.servant.status.secondPlayerId===$scope.servant.id) {
                 return {
-                    mood: 'success gift',
+                    mood: 'warning gift',
                     message: 'please select a card you want to offer as a gift'
                 };
             } else if ($scope.servant.status.waitForNope) {
@@ -221,7 +253,7 @@ angular.module('boomApp', [])
                 case "waiting":
                     return "fa-hourglass-half";
                 case "nuts":
-                    return "fa-bam";
+                    return "fa-reddit-alien";
                 case "playing":
                     return "fa-gamepad";
             }
@@ -266,6 +298,9 @@ angular.module('boomApp', [])
                         $scope.waitingForPlayerSelection = undefined;
                         $scope.selectDeckPos();
                         break;
+                    case "no":
+                        $scope.servant.playNope($scope.servant.id, $scope.selectedCards[0])
+                        break;
 
                     default:
                         $scope.waitingForPlayerSelection = undefined;
@@ -286,6 +321,7 @@ angular.module('boomApp', [])
         };
         $scope.endRound= function () {
             if ($scope.canEndRound()) {
+                $scope.servant.status.lastDrawnCard=true;
                 if ($scope.servant.drawCard()) {
                     $scope.servant.nextPlayer();
                 }
@@ -302,7 +338,7 @@ angular.module('boomApp', [])
             if ($scope.servant===undefined || $scope.servant.currentPlayer()===undefined) {
                 return false;
             }
-            if ($scope.servant.currentPlayer().id===$scope.servant.id && ($scope.servant.status.waitForGift || $scope.servant.status.waitForNope || $scope.servant.status.offeredGift!==undefined || $scope.showFuture)) {
+            if ($scope.servant.currentPlayer().id===$scope.servant.id && ($scope.servant.status.waitForGift || $scope.servant.status.waitForNope!==$scope.servant.status.someOneNoped || $scope.servant.status.offeredGift!==undefined || $scope.showFuture)) {
                 // Gemach!
                 return false;
             }
@@ -319,7 +355,11 @@ angular.module('boomApp', [])
                 if ($scope.servant.status.playerHasToPlayDisposal) {
                     return card.type==="disposal";
                 } else {
-                    return card.type === "thief" || card.type==="shuffle" || card.type==="force" || card.type==="sleep" || card.type==="future" || card.type==="gift" || card.type==="reverse";
+                    if ($scope.servant.status.waitForNope) {
+                        return card.type==="no"
+                    } else {
+                        return card.type === "thief" || card.type === "shuffle" || card.type === "force" || card.type === "sleep" || card.type === "future" || card.type === "gift" || card.type === "reverse";
+                    }
                 }
             }
         };
@@ -342,6 +382,9 @@ angular.module('boomApp', [])
                 cardsAllValid &=$scope.cardSelectable(card);
             });
             if (!cardsAllValid) {
+                return false;
+            }
+            if ($scope.servant.status.lastDrawnCard!==undefined && $scope.servant.status.lastDrawnCard.type!=='nut') {
                 return false;
             }
             if ($scope.selectedCards.length===1) {

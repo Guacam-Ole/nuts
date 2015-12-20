@@ -24,7 +24,7 @@ var master = function () {
     };
 
     this.settings={
-        nopetime:5 // Sekunden, die man Zeit hat, um "NOPE" auszuspielen
+        nopetime:15 // Sekunden, die man Zeit hat, um "NOPE" auszuspielen
     }
 
     
@@ -41,31 +41,39 @@ master.prototype = {
                 JSON.parse(state[player.id]).forEach(function (clientMessage) {
                     var alreadyProcessed= $.inArray(clientMessage.id, obj.readChanges)>=0;
                     if (!alreadyProcessed) {
-                        clientChanges=true;
+                        clientChanges = true;
                         switch (clientMessage.key) {
                             case "join":
-                                if (state.isRunning) {
+                                if (obj.status.isRunning) {
                                     // Zu spät, ändern in watch
-                                    player.state="watching";
+                                    player.state = "watching";
                                 } else {
-                                    player.state="waiting";
+                                    player.state = "waiting";
                                 }
                                 break;
                             case "watch":
-                                player.state="watching";
+                                player.state = "watching";
                                 break;
-                            case "draw":
-                                obj.drawCard(obj.currentPlayer());
-                                break;
-                            case "endDraw":
-                                obj.drawCardFinally(obj.currentPlayer(),clientMessage.value);
-                                break;
-                            case "playCard":
-                                obj.playCard(clientMessage.playerId, clientMessage.cardId,clientMessage.secondId);
-                                break;
-                            case "playNope":
-                                obj.playNope(clientMessage.playerId,clientMessage.cardId);
-                                break;
+                        }
+                        if (obj.status.isRunning) {
+                            switch (clientMessage.key) {
+                                case "draw":
+                                    obj.drawCard(obj.currentPlayer());
+                                    break;
+                                case "endDraw":
+                                    obj.drawCardFinally(obj.currentPlayer(), clientMessage.value);
+                                    break;
+                                case "playCard":
+                                    obj.playCard(clientMessage.playerId, clientMessage.cardId, clientMessage.secondId);
+                                    break;
+                                case "playNope":
+                                    obj.playNope(clientMessage.playerId, clientMessage.cardId);
+                                    break;
+                                case "reset":
+                                    obj.reset();
+                                    break;
+                            }
+
                         }
                         obj.readChanges.push(clientMessage.id);
                     }
@@ -76,6 +84,30 @@ master.prototype = {
         if (clientChanges) {
             obj.toClients();
         }
+    },
+    reset:function() {
+        this.players.forEach(function(player) {
+            gapi.hangout.data.clearValue(player.id);
+        });
+        this.deck=[];
+        //this.players=[];
+        this.playedCards=[];
+        this.log=[];
+      //  this.readChanges=[];
+        this.newMessages=[];
+        this.status={
+            waitForNope:false,      // Darauf warten, dass jemand "Nope" spielt
+            someOneNoped:false,     // Jemand hat "Nope" gespielt?
+            secondPlayer:false,     // Zweiter Spieler für Aktion
+            reverse:false,          // Umgekehrte Reihenfolge?
+            isRunning:false,        // Spiel läuft?
+            isWaiting:false,        // Warten auf Spieler?
+            deckCount:0,            // verbleibende Karte im Deck
+            serverStarted:false,
+            masterId:null           // Server gestartet
+
+        };
+       this.toClients();
     },
 
     toClients:function() {
@@ -100,7 +132,9 @@ master.prototype = {
         // Spiel erzeugen
         this.log=[];
         this.log.unshift("game initializing");
-        this.masterId=masterId;
+        if (masterId!==undefined) {
+            this.masterId = masterId;
+        }
         this.toClients();  // Informieren, dass jemand ein Spiel initialisiert hat.
         this.readAllCards(this.initData);
     },
@@ -358,7 +392,7 @@ master.prototype = {
                 obj.status.waitForNope=true;
                 break;
         }
-        if (secondPlayerId!=='none') {
+        if (secondPlayerId!=='none' && secondPlayerId!==undefined) {
             var secondPlayer= $.grep(obj.players, function(e){ return e.id == secondPlayerId; })[0];
             this.log.unshift(player.name+" chose "+secondPlayer.name+" as the victim");
         }
@@ -371,6 +405,8 @@ master.prototype = {
     },
     setTimeout:function(card, secondPlayer) {
         var obj=this;
+        obj.lastCard=card;
+        obj.lastSecond=secondPlayer;
         if (obj.finalTimeout!==undefined) {
             clearTimeout(obj.finalTimeout);
         }
@@ -388,13 +424,14 @@ master.prototype = {
         var player= $.grep(this.players, function(e){ return e.id == playerId; })[0];
         var card= $.grep(player.cards, function(e){ return e.id == cardId; })[0];
         this.log.unshift(player.name+" played 'No'");
-        this.someOneNoped=!this.someOneNoped;
+        this.status.someOneNoped=!this.status.someOneNoped;
         this.playedCards.unshift(card);
         for(var i = player.cards.length - 1; i >= 0; i--) {
             if(player.cards[i].id===card.id) {
                 player.cards.splice(i, 1);
             }
         }
+        this.setTimeout(this.lastCard, this.lastSecond);
         this.toClients();
     },
     playCardFinally:function(card,secondPlayer) {
@@ -459,7 +496,8 @@ master.prototype = {
                 this.showFuture();
                 break;
             case "reverse":
-                this.reverse=!this.reverse;
+                this.status.reverse=!this.status.reverse;
+                this.log.unshift("direction changed");
                 break;
         }
         this.status.someOneNoped=false;
@@ -470,7 +508,7 @@ master.prototype = {
     getNextPlayer:function(currentPlayerIndex) {
         var obj=this;
         var counter=0;
-        var nextPlayerIndex=obj.reverse?currentPlayerIndex-1:currentPlayerIndex+1;
+        var nextPlayerIndex=obj.status.reverse?currentPlayerIndex-1:currentPlayerIndex+1;
 
         var found=false;
         while (!found) {
@@ -483,7 +521,7 @@ master.prototype = {
             if (this.players[nextPlayerIndex].state==="waiting") {
                 found=true;
             } else {
-                if (this.reverse) {
+                if (this.status.reverse) {
                     nextPlayerIndex--;
                 } else {
                     nextPlayerIndex++;
@@ -592,7 +630,6 @@ master.prototype = {
         obj.status.lastDrawnCard=obj.deck[0];
 
         // TEST: Bombe an den start:
-        obj.deck.unshift(nut);
         obj.toClients();  // Informieren, dass das Spiel gestartet wurde.
 
 

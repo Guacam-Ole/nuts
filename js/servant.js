@@ -78,6 +78,14 @@ game.prototype = {
             }
         )
     },
+    newRound:function() {
+        this.players.forEach(function(player) {
+            gapi.hangout.data.clearValue(player.id);
+        });
+        this.addState("reset","");
+        this.writeState();
+    },
+
     writeState:function() {
         // Mitteilung an den Master
         var obj=this;
@@ -101,6 +109,7 @@ game.prototype = {
         gapi.hangout.data.setValue(obj.id, JSON.stringify(oldMessages));
     },
     reset:function() {
+
         this.deck=[];
         this.players=[];
         this.playedCards=[];
@@ -206,7 +215,13 @@ game.prototype = {
         this.writeState();
     },
     playNope:function(playerId, card) {
-        this.addCardState(playerId,card.id,0);
+        this.newMessages.push(
+            {
+                key:"playNope",
+                id:this.getUid(),
+                cardId:card.id,
+                playerId:playerId
+            });
         this.writeState();
     },
 

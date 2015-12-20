@@ -212,9 +212,11 @@ game.prototype = {
 
     drawCard:function() {
         this.addState("draw","");
+        this.writeState();
     },
     endDraw:function(nutPosition) {
         this.addState("endDraw",nutPosition);
+        this.writeState();
     },
 
     currentPlayer:function() {

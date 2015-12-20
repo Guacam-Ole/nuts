@@ -132,7 +132,7 @@ li.selectable:hover {
 .cardsuggestion {
     position: absolute;
     top: -30px;
-    left: 30px;
+    left: 50px;
     color: red;
 }
 
@@ -400,19 +400,13 @@ span.subtitle {
     margin: -10px;
 }
 
-.deckText span {
-    font-size: 40px;
-}
+
 .deckText {
     position: relative;
-    top: -110px;
-    background: rgba(6, 6, 6, 0.51);
     width: 70px;
-    height: 70px;
     margin-left: 10px;
     padding: 5px;
-    color: #FFFFFF;
-    /* padding-top: 20px; */
+    color: black;
     text-align: center;
 }
 
@@ -431,4 +425,18 @@ img.lastDrawnCard {
     margin-top: 10px;
     font-size: 20px;
     font-weight: bold;
+}
+
+.lastDrawnCard {
+    cursor: pointer;
+}
+
+.cardName {
+    position: absolute;
+    top: 0px;
+    left: 12px;
+    font-size: 10px;
+    text-align: center;
+    width: 75px;
+    /* background: green; */
 }

@@ -24,14 +24,14 @@
     <base href="https://files.oles-cloud.de/nuts/" > <!-- TODO: Produktivadresse wenn Testen vorbei. JSON-Url in MASTER.JS nicht vergessen! -->
     <meta charset="utf-8"/>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
-    <link rel="stylesheet" href="https://files.oles-cloud.de/nuts/css/boom.css?v=2">
+    <link rel="stylesheet" href="https://files.oles-cloud.de/nuts/css/boom.css?v=3">
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
     <script src="//plus.google.com/hangouts/_/api/v1/hangout.js"></script>
-    <script src="js/master.js?v=12"></script>
-    <script src="js/servant.js?v=8"></script>
-    <script src="js/app.js?v=12"></script>
+    <script src="js/master.js?v=18"></script>
+    <script src="js/servant.js?v=10"></script>
+    <script src="js/app.js?v=22"></script>
     <script src="js/events.js?v=2"></script>
 
 <!--     <script src="js/circle-progress.js"></script> -->
@@ -87,12 +87,14 @@
         <div class="top">
             <div class="deck">
                 <img class="{{canEndRound()?'selectable':''}}" ng-click="endRound()" src="./img/cardback.png">
-                <img class="lastDrawnCard" ng-click="endDraw()" src="./img/{{servant.status.lastDrawnCard.image}}" ng-show="servant.status.lastDrawnCard || 1==1">
-                <div class="deckText"><span>{{servant.status.deckCount}}</span><br/>cards</div>
+                <img class="lastDrawnCard" ng-click="endDraw()" src="./img/{{servant.status.lastDrawnCard.image}}" ng-show="showLastDrawnCard()">
+                <div class="deckText">{{servant.status.deckCount}} cards</div>
             </div>
             <div class="lastPlayedCards">
                 <div ng-repeat="card in servant.playedCards track by $index" class="singleCard" style="{{'z-index: '+(100-$index)+'; margin-top: '+($index*15)}}">
                     <img src="./img/{{card.image}}" >
+                    <div class="cardName">{{card.name}}</div>
+
                 </div>
             </div>
         </div>
@@ -112,16 +114,18 @@
             <div>Next cards:</div>
             <div ng-repeat="card in servant.future track by $index" class="singleCard" >
                 <img src="./img/{{card.image}}" >
+                <div class="cardName">{{card.name}}</div>
             </div>
             <div><a style="cursor:pointer" ng-click="showFuture=false;">Close</a> </div>
         </div>
         <div class="yours" ng-Disabled="!myTurn()">
-            <div class="playCards"><a class="button {{canPlay()?'blue':'gray'}}" ng-click="playCard()">Play card(s)</a><div ng-show="showSelect()" class="selectPlayer">Please select a player</div></div>
+            <div class="playCards"><a class="button {{canPlay()?'blue':'gray'}}" ng-click="playCard()">Play card(s)</a><a ng-click="wait()">refresh</a> <div ng-show="showSelect()" class="selectPlayer">Please select a player</div></div>
             <div class="yourCards">
                 <div class="infoState alert-box {{getState().mood}}"><div>{{getState().message}}</div></div>
                 <div  class="singleCard {{cardIsSelected(card)?'selected':''}}" ng-repeat="card in servant.me().cards track by $index" style="{{cardIsSelected(card)?'bottom:50px;z-index:700':''}}">
                     <div ng-show="cardSelectable(card)"><i class="cardsuggestion fa fa-long-arrow-down">&nbsp;</i></div>
-                    <img src="./img/{{card.image}}" title="{{card.name}}" ng-click="selectCard(card)"  >
+                    <img src="./img/{{card.image}}" title="{{card.description}}" ng-click="selectCard(card)"  >
+                    <div class="cardName">{{card.name}}</div>
                 </div>
 
             </div>

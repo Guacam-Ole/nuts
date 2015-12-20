@@ -87,7 +87,14 @@ angular.module('boomApp', [])
                 return false;
             }
             if ($scope.servant.currentPlayer().id===$scope.servant.id) {
-                return ($scope.servant.status.secondPlayerId===undefined || $scope.servant.status.secondPlayerId==='none') && !$scope.servant.status.waitForNope;
+                if (($scope.servant.status.secondPlayerId===undefined || $scope.servant.status.secondPlayerId==='none') && !$scope.servant.status.waitForNope) {
+                    if ($scope.showLastDrawnCard()) {
+                        // Karte bereits gezogen
+                        return $scope.servant.status.lastDrawnCard.type==="nut"; // Nussknacker muss gespielt werden
+                    } else {
+                        return true;
+                    }
+                }
             } else {
                 if ($scope.servant.status.secondPlayerId===$scope.servant.id) {
                     if ($scope.status.waitForGift && $scope.status.offeredGift==undefined) {
@@ -102,11 +109,14 @@ angular.module('boomApp', [])
         };
 
 
-
+        $scope.gameStarted=function() {
+            return $scope.servant!==undefined && $scope.servant.players!==undefined && $scope.servant.players.length>0 && $scope.servant.currentPlayer()!==undefined;
+        };
 
         $scope.wait=function() {
 
         };
+
         $scope.showTheFuture=function() {
             if (!$scope.showFuture) {
                 return false;
@@ -132,10 +142,25 @@ angular.module('boomApp', [])
                     message: 'waiting for players'
                 };
             } else if ($scope.servant.currentPlayer().id===$scope.servant.id ) {
-                return {
-                    mood: 'success play',
-                    message: 'Please play a card or select a card from the deck to end your turn'
-                };
+                if ($scope.showLastDrawnCard()) {
+                    if ($scope.servant.status.lastDrawnCard.type==="nut") {
+                        return {
+                            mood: 'warning play',
+                            message: 'Please play the nutcracker!'
+                        };
+                    } else {
+                        return {
+                            mood: 'success play',
+                            message: 'Please click onto to the card above to take it'
+                        };
+                    }
+                } else {
+                    return {
+                        mood: 'success play',
+                        message: 'Please play a card or draw a card to end your turn '
+                    };
+                }
+
             } else if ($scope.servant.status.waitForGift && $scope.servant.status.secondPlayerId===$scope.servant.id) {
                 return {
                     mood: 'success gift',
@@ -168,6 +193,10 @@ angular.module('boomApp', [])
                 return false;
             }
             if ($scope.servant.currentPlayer()===undefined) {
+                return false;
+            }
+            if ($scope.servant.status.lastDrawnCard!==undefined) {
+                // Hat schon eine Karte gezogen
                 return false;
             }
             return  $scope.servant.currentPlayer().id===$scope.servant.id && !$scope.servant.status.playerHasToPlayDisposal && !$scope.servant.status.waitForNope && !$scope.showFuture;
@@ -217,6 +246,12 @@ angular.module('boomApp', [])
         $scope.beginRound=function() {
             $scope.selectedCards=[];
         };
+        $scope.showLastDrawnCard=function() {
+            if (!$scope.gameStarted()) {
+                return false;
+            }
+          return $scope.servant.status.lastDrawnCard!==undefined && $scope.servant.currentPlayer().id===$scope.servant.id ;
+        };
         $scope.playCard=function() {
             if (!$scope.canPlay()) {
                 return;
@@ -227,6 +262,11 @@ angular.module('boomApp', [])
                     case "gift":
                         $scope.waitingForPlayerSelection = "getCard";
                         break;
+                    case "disposal":
+                        $scope.waitingForPlayerSelection = undefined;
+                        $scope.selectDeckPos();
+                        break;
+
                     default:
                         $scope.waitingForPlayerSelection = undefined;
                         $scope.servant.playCard($scope.selectedCards[0]);
@@ -240,10 +280,6 @@ angular.module('boomApp', [])
                     $scope.servant.status.waitForGift=false;
                 } else if ($scope.servant.status.waitForNope) {
                     $scope.servant.playNope($scope.servant.id, $scope.selectedCards[0])
-                } else  {
-                    // Nussknacker
-                    $scope.selectDeckPos();
-                    // $scope.servant.playCard($scope.selectedCards[0]);  // Nussknacker
                 }
                 $scope.selectedCards=[];
             }
@@ -258,7 +294,7 @@ angular.module('boomApp', [])
         $scope.endDraw=function() {
             if ($scope.servant.status.lastDrawnCard!==undefined && $scope.servant.status.lastDrawnCard.type!=='nut') {
                 $scope.servant.endDraw(-1);
-                $scope.servant.status.lastDrawnCard=undefined;
+              //  $scope.servant.status.lastDrawnCard=undefined;
             }
         };
         $scope.cardSelectable=function(card) {

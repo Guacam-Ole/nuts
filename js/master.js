@@ -274,13 +274,13 @@ master.prototype = {
             var disposal = $.grep(player.cards, function(e){ return e.type == "disposal"; });
             if (disposal.length>0) {
                 this.status.playerHasToPlayDisposal=true;
-                obj.toClients();
+                this.toClients();
             } else {
                 // Raus!
                 player.state="nuts";
                 this.log.unshift(player.name + " has gone nuts!");
                 this.playedCards.unshift(card);
-                obj.nextPlayer();
+                this.nextPlayer();
             }
         }
         if (dontLog) {
@@ -291,11 +291,12 @@ master.prototype = {
         // Karte angeschaut und genommen
         // NutPosition= Position, an der die Nuss eingefügt wird (wenn Knacker gespielt)
         var card=this.status.lastDrawnCard;
-        this.playedCards.unshift(card);
+     //   this.playedCards.unshift(card);
         player.cards.push(card);
         this.status.lastDrawnCard=undefined;
         if (nutPosition>=0) {
-            var disposal = $.grep(player.cards, function(e){ return e.type == "disposal"; });
+            this.status.playerHasToPlayDisposal=false;
+            var disposal = $.grep(player.cards, function(e){ return e.type == "disposal"; })[0];
             this.log.unshift(player.name + " did NOT go nuts!");
             this.playedCards.unshift(disposal);
             for(var i = player.cards.length - 1; i >= 0; i--) {
@@ -303,8 +304,8 @@ master.prototype = {
                     player.cards.splice(i, 1);
                 }
             }
-
-            this.deck.splice(nutPosition, 0, disposal);
+            var nut = $.grep(this.allCards, function(e){ return e.type == "nut"; })[0];
+            this.deck.splice(nutPosition, 0, nut);
         }
         if (!dontLog) {
             this.nextPlayer();
@@ -421,7 +422,7 @@ master.prototype = {
                 var newcard = secondPlayer.cards[cardId];
                 secondPlayer.cards.splice(cardId, 1);
                 this.currentPlayer().cards.push(newcard);
-                this.state.secondPlayerId=undefined;
+                this.status.secondPlayerId=undefined;
                 break;
             case "force":
                 // Nächster Spieler muss zwei Runden spielen
@@ -445,7 +446,7 @@ master.prototype = {
                 secondPlayer.cards.splice(this.status.offeredGift, 1);
                 this.currentPlayer().cards.push(newcard);
                 this.status.offeredGift=undefined;
-                this.state.secondPlayerId=undefined;
+                this.status.secondPlayerId=undefined;
                 break;
             case "shuffle":
                 // Mischen des Stapels
@@ -589,6 +590,9 @@ master.prototype = {
         obj.status.isRunning=true;
         obj.log.unshift("ready to play");
         obj.status.lastDrawnCard=obj.deck[0];
+
+        // TEST: Bombe an den start:
+        obj.deck.unshift(nut);
         obj.toClients();  // Informieren, dass das Spiel gestartet wurde.
 
 
@@ -600,70 +604,84 @@ var allcards=
         {
             "type":"nut",
             "name":"Hazelnut",
-            "image":"nut.png"
+            "image":"nut.png",
+            "description":"draw this and you get nuts!"
         },
         {
             "type":"disposal",
-            "name":"Disposal kit",
-            "image":"disposal.png"
+            "name":"Nutcracker",
+            "image":"disposal.png",
+            "description":"use this when you draw a hazelnut"
         },
         {
             "type":"thief",
             "name":"Thief",
-            "image":"thief1.png"
+            "image":"thief1.png",
+            "description":"play two thiefs of the same head color to steal a card from an opponent"
         },
         {
             "type":"thief",
             "name":"Thief",
-            "image":"thief2.png"
+            "image":"thief2.png",
+            "description":"play two thiefs of the same head color to steal a card from an opponent"
         },
         {
             "type":"thief",
             "name":"Thief",
-            "image":"thief3.png"
+            "image":"thief3.png",
+            "description":"play two thiefs of the same head color to steal a card from an opponent"
         },
         {
             "type":"thief",
             "name":"Thief",
-            "image":"thief4.png"
+            "image":"thief4.png",
+            "description":"play two thiefs of the same head color to steal a card from an opponent"
         },
         {
             "type":"thief",
             "name":"Thief",
-            "image":"thief5.png"
+            "image":"thief5.png",
+            "description":"play two thiefs of the same head color to steal a card from an opponent"
         },
         {
             "type":"force",
-            "name":"Force to draw",
-            "image":"attack.png"
+            "name":"Force",
+            "image":"attack.png",
+            "description":"force the next player to play two rounds"
         },
         {
             "type":"no",
             "name":"No",
-            "image":"no.png"
+            "image":"no.png",
+            "description":"disable the last card"
         },
         {
             "type":"sleep",
             "name":"Sleep",
-            "image":"sleep.png"
+            "image":"sleep.png",
+            "description":"end the round without drawing a card"
         },
         {
             "type":"future",
             "name":"See the future",
-            "image":"future.png"
+            "image":"future.png",
+            "description":"look what's on the deck"
         },
         {
             "type":"shuffle",
             "name":"Shuffle",
-            "image":"shuffle.png"
+            "image":"shuffle.png",
+            "description":"shuffle the deck"
         }, {
             "type":"gift",
-            "name":"Happy Birthday",
-            "image":"gift.png"
+            "name":"Gift",
+            "image":"gift.png",
+            "description":"take a card from an opponent"
         },
         {
             "type":"reverse",
-            "name":"change play direction",
-            "image":"reverse.png"
+            "name":"Reverse",
+            "image":"reverse.png",
+            "description":"reverse the play order"
         }
     ];

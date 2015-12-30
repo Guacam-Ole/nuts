@@ -2,13 +2,6 @@
 <project version="4">
   <component name="PublishConfigData" autoUpload="Always" serverName="files.oles-cloud">
     <serverData>
-      <paths name="XamPP">
-        <serverdata>
-          <mappings>
-            <mapping local="$PROJECT_DIR$" web="/" />
-          </mappings>
-        </serverdata>
-      </paths>
       <paths name="files.oles-cloud">
         <serverdata>
           <mappings>
@@ -16,7 +9,14 @@
           </mappings>
         </serverdata>
       </paths>
-      <paths name="sauger">
+      <paths name="lokal">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="xampp">
         <serverdata>
           <mappings>
             <mapping local="$PROJECT_DIR$" web="/" />

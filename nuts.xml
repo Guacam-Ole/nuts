@@ -29,7 +29,7 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
     <script src="//plus.google.com/hangouts/_/api/v1/hangout.js"></script>
-    <script src="js/master.js?v=35"></script>
+    <script src="js/master.js?v=36"></script>
     <script src="js/servant.js?v=16"></script>
     <script src="js/app.js?v=33"></script>
     <script src="js/events.js?v=2"></script>
@@ -103,7 +103,7 @@
             <div class="deck">
                 <img class="{{canEndRound()?'selectable':''}}" ng-click="endRound()" src="./img/cardback.png">
                 <img class="lastDrawnCard" ng-click="endDraw()" src="./img/{{servant.status.lastDrawnCard.image}}" ng-show="showLastDrawnCard()">
-                <div class="cardName" ng-show="showLastDrawnCard()">boing{{servant.status.lastDrawnCard.name}}</div>
+                <div class="cardName" ng-show="showLastDrawnCard()">{{servant.status.lastDrawnCard.name}}</div>
                 <div class="deckText">{{servant.status.deckCount}} cards</div>
             </div>
             <div class="lastPlayedCards">
@@ -126,13 +126,13 @@
         </pre>
         </div>
 
-        <div class="previewCards" ng-show="servant.showFuture">
+        <div class="previewCards" ng-show="servant.showFuture()">
             <div>Next cards:</div>
-            <div ng-repeat="card in servant.future track by $index" class="singleCard" >
+            <div ng-repeat="card in servant.status.future track by $index" class="singleCard" >
                 <img src="./img/{{card.image}}" >
                 <div class="cardName">{{card.name}}</div>
             </div>
-            <div><a style="cursor:pointer" ng-click="showFuture=false;">Close</a> </div>
+            <div><a style="cursor:pointer" ng-click="hideFuture()">Close</a> </div>
         </div>
         <div class="yours" ng-Disabled="!myTurn()">
             <div class="playCards"><a class="button {{canPlay()?'blue':'gray'}}" ng-click="playCard()">Play card(s)</a></div>

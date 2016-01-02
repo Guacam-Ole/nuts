@@ -12,6 +12,7 @@ var master = function () {
     this.status={
         masterId:null,
         playerHasToPlayDisposal:false,
+        numRounds:1,
 
         waitForNope:false,      // Darauf warten, dass jemand "Nope" spielt
         someOneNoped:false,     // Jemand hat "Nope" gespielt?
@@ -72,6 +73,9 @@ master.prototype = {
                                 case "reset":
                                     obj.reset();
                                     break;
+                                case "offerGift":
+                                    obj.offerGift(clientMessage.value);
+                                    break;
                             }
 
                         }
@@ -84,6 +88,12 @@ master.prototype = {
         if (clientChanges) {
             obj.toClients();
         }
+    },
+    offerGift:function(cardId) {
+        var secondplayer= $.grep(this.players, function(e){ return e.id == this.status.secondPlayerId; })[0];
+        var card= $.grep(secondplayer.cards, function(e){ return e.id == cardId; })[0];
+        this.status.offeredGift=card;
+        this.setTimeout(obj.lastCard, secondplayer);
     },
     reset:function() {
         this.players.forEach(function(player) {
@@ -294,6 +304,8 @@ master.prototype = {
         return ("0000" + (Math.random()*Math.pow(36,4) << 0).toString(36)).slice(-4)
     },
     drawCard:function(player, dontLog) {
+        this.status.showTheFuture=false;
+        this.status.future=undefined;
         // Karte aus Deck ziehen
         if (player.name!==undefined && !dontLog) {
             this.log.unshift(player.name + " took one card");
@@ -342,12 +354,26 @@ master.prototype = {
             this.deck.splice(nutPosition, 0, nut);
         }
         if (!dontLog) {
-            this.nextPlayer();
+            if (this.status.numRounds===1) {
+                this.nextPlayer();
+            }
+            if (this.status.numRounds>1) {
+                this.status.numRounds--;
+            }
+
             this.toClients();
         }
     },
 
     showFuture:function() {
+        this.status.seeTheFuture=true;
+        this.status.future=[];
+        for (var i=0; i<3; i++) {
+            if (deck.length>i) {
+                this.status.future.push(deck[i]);
+            }
+        }
+        this.toClients();
 
     },
     getSecondPlayer:function() {
@@ -436,6 +462,8 @@ master.prototype = {
     },
     playCardFinally:function(card,secondPlayer) {
         this.status.waitForNope=false;
+        this.status.seeTheFuture=false;
+        this.status.future=undefined;
         if (this.someOneNoped && card.type!="force") {
             this.someOneNoped=false;
             return; // nix tun
@@ -445,6 +473,7 @@ master.prototype = {
             this.setTimeout(card); // Solange warten, bis Spieler Karte ausgewählt hat.
             return;
         }
+
         switch (card.type) {
             case "disposal":
                 // Nuss entschärft
@@ -464,10 +493,8 @@ master.prototype = {
             case "force":
                 // Nächster Spieler muss zwei Runden spielen
                 this.log.unshift(this.currentPlayer().name+" forces the next player to play two rounds");
-                if (this.someOneNoped) {
-                    this.numRounds=1;
-                } else {
-                    this.numRounds = 2;   // Nächster Spieler muss zweimal ziehen
+                if (!this.someOneNoped) {
+                    this.status.numRounds = 2;   // Nächster Spieler muss zweimal ziehen
                 }
                 this.nextPlayer();
                 break;

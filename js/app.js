@@ -299,7 +299,7 @@ angular.module('boomApp', [])
                         $scope.selectDeckPos();
                         break;
                     case "no":
-                        $scope.servant.playNope($scope.servant.id, $scope.selectedCards[0])
+                        $scope.servant.playNope($scope.servant.id, $scope.selectedCards[0]);
                         break;
 
                     default:
@@ -311,13 +311,15 @@ angular.module('boomApp', [])
             } else {
                 // Reaktionskarte
                 if ($scope.servant.status.waitForGift) {
-                    $scope.servant.status.offeredGift=$scope.selectedCards[0];
-                    $scope.servant.status.waitForGift=false;
+                    $scope.servant.offerGift($scope.selectedCards[0]);
                 } else if ($scope.servant.status.waitForNope) {
                     $scope.servant.playNope($scope.servant.id, $scope.selectedCards[0])
                 }
                 $scope.selectedCards=[];
             }
+        };
+        $scope.hideFuture=function() {
+            $scope.servant.status.showTheFuture=false;
         };
         $scope.endRound= function () {
             if ($scope.canEndRound()) {
@@ -398,7 +400,7 @@ angular.module('boomApp', [])
                     return true;
                 }
             } else if ($scope.selectedCards.length===2) {
-                return $scope.servant.currentPlayer().id===$scope.servant.id && !$scope.servant.status.playerHasToPlayDisposal && $scope.selectedCards[0].type==="thief";
+                return $scope.servant.currentPlayer().id===$scope.servant.id && !$scope.servant.status.playerHasToPlayDisposal && $scope.selectedCards[0].type==="thief"&& $scope.selectCards[0].image===$scope.selectedCards[1].image;
             }
         };
     });

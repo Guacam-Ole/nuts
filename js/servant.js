@@ -68,6 +68,11 @@ game.prototype = {
             });
         }
     },
+    offerGift:function(card) {
+        this.addState("offerGift",card.id);
+        this.status.waitForGift=false;
+        this.writeState();
+    },
     addState:function(key,value) {
         var obj=this;
         this.newMessages.push(
@@ -204,6 +209,12 @@ game.prototype = {
                 playerId:playerId,
                 secondId:secondPlayerId
             });
+    },
+    showFuture:function() {
+        if (this.currentPlayer()===undefined) {
+            return false;
+        }
+        return this.id===this.currentPlayer().id && this.status.showTheFuture;
     },
 
     playCard:function(card, secondPlayerId) {
